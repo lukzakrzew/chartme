@@ -30,13 +30,29 @@ const computedNumberButtons = computed((): number[] => {
 
   const baseValue = lastNumericValue ? (lastNumericValue.value as number) : 5;
 
-  // Create 5 smaller, 1 same, 5 bigger values
-  const buttons: number[] = [];
-  for (let i = -5; i <= 5; i++) {
-    buttons.push(Math.max(0, baseValue + i)); // Ensure non-negative values
+  // Create 11 buttons around the base value, but adjust range when hitting boundaries
+  const totalButtons = 11;
+  let startOffset = -5;
+  let endOffset = 5;
+
+  // If we would have too many values below 0, shift the range upward
+  const wouldHaveNegatives = baseValue + startOffset < 0;
+  if (wouldHaveNegatives) {
+    const negativeCount = Math.abs(baseValue + startOffset);
+    startOffset += negativeCount;
+    endOffset += negativeCount;
   }
 
-  return buttons;
+  const buttons: number[] = [];
+  for (let i = startOffset; i <= endOffset; i++) {
+    const value = Math.max(0, baseValue + i);
+    buttons.push(value);
+  }
+
+  // Remove duplicates (in case of edge cases) and sort
+  const uniqueButtons = [...new Set(buttons)].sort((a, b) => a - b);
+
+  return uniqueButtons;
 });
 
 // Comment functionality

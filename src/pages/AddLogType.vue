@@ -104,6 +104,7 @@ function onSubmit() {
   logsStore.addLogType({
     name: form.name,
     type: form.type,
+    desc: form.desc,
     min: form.min,
     max: form.max,
   });

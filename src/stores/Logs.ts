@@ -18,7 +18,6 @@ export const useLogsStore = defineStore("logs", () => {
   }
 
   function getLogType(name: string) {
-    console.log("getLogType", name);
     return logTypes.value.find((lt) => lt.name === name);
   }
 
