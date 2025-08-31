@@ -26,13 +26,23 @@ const goToChart = () => {
   const logTypeName = route.params.logTypeName as string;
   router.push(`/chart/${logTypeName}`);
 };
+
+// Check if we're currently on the chart page
+const isOnChartPage = () => {
+  return route.path.startsWith("/chart/");
+};
 </script>
 
 <template>
   <div class="bottom-half">
     <div class="history-header">
       <h5>Log History</h5>
-      <button class="chart-button" @click="goToChart" title="View Chart">
+      <button
+        v-if="!isOnChartPage()"
+        class="chart-button"
+        @click="goToChart"
+        title="View Chart"
+      >
         📊
       </button>
     </div>

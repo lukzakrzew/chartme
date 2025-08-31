@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useLogsStore } from "@/stores/Logs";
 import { useRoute } from "vue-router";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import type { LogValue } from "@/types";
 import LogHistory from "@/components/LogHistory.vue";
 import {
@@ -38,12 +38,64 @@ const logTypeName = route.params.logTypeName as string;
 const logType = logsStore.getLogType(logTypeName);
 const logValues = logsStore.getLogValues(logTypeName);
 
-// Generate last 30 days
-const getLast30Days = () => {
+// Track current period offset (0 = most recent period, 1 = previous period, etc.)
+const periodOffset = ref(0);
+
+// Track selected day range (30 or 90 days)
+const selectedDays = ref(30);
+
+// Navigation functions
+const goToPreviousPeriod = () => {
+  periodOffset.value++;
+};
+
+const goToNextPeriod = () => {
+  if (periodOffset.value > 0) {
+    periodOffset.value--;
+  }
+};
+
+// Day range switcher functions
+const setDayRange = (days: number) => {
+  selectedDays.value = days;
+  // Reset to current period when switching day ranges
+  periodOffset.value = 0;
+};
+
+// Check if navigation buttons should be enabled
+const canGoNext = computed(() => periodOffset.value > 0);
+const canGoPrevious = computed(() => {
+  // Allow going back if there's data in the previous period
+  // For simplicity, we'll allow going back up to 10 periods
+  return periodOffset.value < 10;
+});
+
+// Get the date range for display
+const currentDateRange = computed(() => {
+  const days = getDaysForPeriod(periodOffset.value, selectedDays.value);
+  const startDate = new Date(days[0]);
+  const endDate = new Date(days[days.length - 1]);
+
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+  return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+});
+
+// Generate days for the current period
+const getDaysForPeriod = (offset: number, dayCount: number) => {
   const days = [];
   const today = new Date();
 
-  for (let i = 29; i >= 0; i--) {
+  // Calculate the start date based on offset
+  const startOffset = offset * dayCount;
+  const endOffset = startOffset + dayCount - 1;
+
+  for (let i = endOffset; i >= startOffset; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     days.push(date.toISOString().split("T")[0]);
@@ -54,7 +106,10 @@ const getLast30Days = () => {
 
 // Prepare chart data
 const chartData = computed(() => {
-  const last30Days = getLast30Days();
+  const currentPeriodDays = getDaysForPeriod(
+    periodOffset.value,
+    selectedDays.value
+  );
 
   // Create a map of dates to values from logValues
   const valuesByDate: { [date: string]: number | boolean } = {};
@@ -62,14 +117,14 @@ const chartData = computed(() => {
   if (logValues.value) {
     logValues.value.forEach((log: LogValue) => {
       const logDate = new Date(log.timestamp).toISOString().split("T")[0];
-      if (last30Days.includes(logDate)) {
+      if (currentPeriodDays.includes(logDate)) {
         valuesByDate[logDate] = log.value;
       }
     });
   }
 
   // Map the data to chart format
-  const data = last30Days.map((date) => {
+  const data = currentPeriodDays.map((date) => {
     const value = valuesByDate[date];
     if (value === undefined || value === null) {
       return null;
@@ -84,19 +139,15 @@ const chartData = computed(() => {
     const startIndex = Math.max(0, index - 6);
     const window = data.slice(startIndex, index + 1);
 
-    // Filter out null values for average calculation
-    const validValues = window.filter((v) => v !== null) as number[];
-
-    if (validValues.length === 0) {
-      return null;
-    }
+    // Convert null values to 0 for moving average calculation
+    const valuesWithZeros = window.map((v) => (v === null ? 0 : v)) as number[];
 
     // Calculate average
-    const sum = validValues.reduce((acc, val) => acc + val, 0);
-    return sum / validValues.length;
+    const sum = valuesWithZeros.reduce((acc, val) => acc + val, 0);
+    return sum / valuesWithZeros.length;
   });
 
-  const labels = last30Days.map((date) => {
+  const labels = currentPeriodDays.map((date) => {
     const d = new Date(date);
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   });
@@ -105,7 +156,7 @@ const chartData = computed(() => {
     labels,
     datasets: [
       {
-        label: logType?.name || "Values",
+        label: "",
         data,
         backgroundColor: "#007bff",
         borderColor: "#0056b3",
@@ -113,7 +164,7 @@ const chartData = computed(() => {
         type: "bar" as const,
       },
       {
-        label: "7-Day Average",
+        label: "",
         data: movingAverage,
         borderColor: "#28a745",
         backgroundColor: "rgba(40, 167, 69, 0.1)",
@@ -137,12 +188,10 @@ const chartOptions = computed(() => {
     maintainAspectRatio: false,
     plugins: {
       title: {
-        display: true,
-        text: `${logType?.name || "Log"} - Last 30 Days`,
+        display: false,
       },
       legend: {
-        display: true,
-        position: "top" as const,
+        display: false,
       },
       tooltip: {
         callbacks: {
@@ -182,8 +231,7 @@ const chartOptions = computed(() => {
       },
       y: {
         title: {
-          display: true,
-          text: isBoolean ? "Value" : logType?.desc || "Value",
+          display: false,
         },
         beginAtZero: true,
         grid: {
@@ -216,6 +264,47 @@ const chartOptions = computed(() => {
   <div v-if="!logType" class="no-such-log-type">No such log type</div>
   <div v-else class="chart-container">
     <div class="chart-section">
+      <div class="navigation-bar">
+        <div class="nav-left">
+          <button
+            @click="goToPreviousPeriod"
+            :disabled="!canGoPrevious"
+            class="nav-button"
+          >
+            ←
+          </button>
+        </div>
+
+        <div class="nav-center">
+          <div class="day-switcher">
+            <button
+              @click="setDayRange(30)"
+              :class="{ active: selectedDays === 30 }"
+              class="day-button"
+            >
+              30d
+            </button>
+            <button
+              @click="setDayRange(90)"
+              :class="{ active: selectedDays === 90 }"
+              class="day-button"
+            >
+              90d
+            </button>
+          </div>
+          <div class="date-range">{{ currentDateRange }}</div>
+        </div>
+
+        <div class="nav-right">
+          <button
+            @click="goToNextPeriod"
+            :disabled="!canGoNext"
+            class="nav-button"
+          >
+            →
+          </button>
+        </div>
+      </div>
       <div class="chart-area">
         <Chart type="bar" :data="chartData" :options="chartOptions" />
       </div>
@@ -243,12 +332,102 @@ const chartOptions = computed(() => {
 .chart-section {
   flex: 1;
   padding: 20px;
+  padding-top: 0;
   border-bottom: 1px solid #eee;
   min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.navigation-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0;
+}
+
+.nav-left,
+.nav-right {
+  flex: 0 0 auto;
+  width: 50px;
+  display: flex;
+  justify-content: center;
+}
+
+.nav-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.day-switcher {
+  display: flex;
+  gap: 4px;
+  background: #f8f9fa;
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.nav-button {
+  padding: 0;
+  border: 1px solid #ddd;
+  background: #f8f9fa;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 5px;
+}
+
+.nav-button:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.day-button {
+  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6c757d;
+  transition: all 0.2s;
+}
+
+.day-button.active {
+  background: #007bff;
+  color: white;
+}
+
+.day-button:hover:not(.active) {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.date-range {
+  font-weight: 500;
+  font-size: 14px;
+  color: #495057;
 }
 
 .chart-area {
-  height: 100%;
+  flex: 1;
   position: relative;
 }
 </style>
