@@ -1,4 +1,4 @@
-import type { LogType, LogValue } from "@/types";
+import type { LogType, LogValue, Category } from "@/types";
 import store from "store2";
 import { defineStore } from "pinia";
 import { ref, type Ref } from "vue";
@@ -10,11 +10,15 @@ import { logsPullups } from "@/testData/logs-pullups";
 
 export const LocalStorageKeys = {
   logTypes: "logTypes",
+  categories: "categories",
   logsPrefix: "logs-",
 } as const;
 
 export const useLogsStore = defineStore("logs", () => {
   const logTypes = ref<LogType[]>(store.get(LocalStorageKeys.logTypes) || []);
+  const categories = ref<Category[]>(
+    store.get(LocalStorageKeys.categories) || []
+  );
   const logValuesRefs = new Map<string, Ref<LogValue[]>>();
 
   function addLogType(logType: LogType) {
@@ -24,6 +28,15 @@ export const useLogsStore = defineStore("logs", () => {
 
   function getLogType(name: string) {
     return logTypes.value.find((lt) => lt.name === name);
+  }
+
+  function addCategory(category: Category) {
+    categories.value.push(category);
+    store.set(LocalStorageKeys.categories, categories.value);
+  }
+
+  function getCategory(name: string) {
+    return categories.value.find((c) => c.name === name);
   }
 
   function getLogValues(name: string): Ref<LogValue[]> {
@@ -117,8 +130,11 @@ export const useLogsStore = defineStore("logs", () => {
 
   return {
     logTypes,
+    categories,
     addLogType,
     getLogType,
+    addCategory,
+    getCategory,
     getLogValues,
     addLogValue,
     // Debug methods

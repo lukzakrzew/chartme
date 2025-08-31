@@ -27,3 +27,10 @@ export type LogValue = {
   timestamp: string;
   comment: string;
 };
+
+export type Category = {
+  name: string;
+  description?: string;
+  icon: string;
+  color: string;
+};

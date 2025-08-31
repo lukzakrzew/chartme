@@ -8,6 +8,13 @@
           <router-link to="/" class="title-link">ChartMe</router-link>
         </q-toolbar-title>
         <q-btn flat round dense icon="add" :to="{ path: '/add-log-type' }" />
+        <q-btn
+          flat
+          round
+          dense
+          icon="category"
+          :to="{ path: '/add-category' }"
+        />
       </q-toolbar>
     </q-header>
 
