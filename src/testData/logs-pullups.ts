@@ -1,142 +1,137 @@
 import type { LogValues } from "@/types";
 import getPastDate from "./getPastDate";
 
-export const logsPushups: LogValues = {
-  name: "Pushups",
+export const logsPullups: LogValues = {
+  name: "Pullups",
   values: [
     {
-      value: 5,
+      value: 1,
       timestamp: getPastDate(30),
-      comment: "First day - let's do this! 🚀",
+      comment: "First pullup attempt - so hard! 😅",
     },
     {
-      value: 8,
+      value: 1,
       timestamp: getPastDate(29),
-      comment: "Starting my journey",
+      comment: "One is better than zero!",
     },
     {
-      value: 9,
+      value: 2,
       timestamp: getPastDate(28),
+      comment: "Progress! Got a second one 💪",
+    },
+    {
+      value: 2,
+      timestamp: getPastDate(27),
       comment: "",
     },
+    // Gap day 26 - rest day
     {
-      value: 10,
-      timestamp: getPastDate(27),
-      comment: "Hotel room workout",
-    },
-    // Gap day 26 - travel day
-    {
-      value: 11,
+      value: 2,
       timestamp: getPastDate(25),
       comment: "",
     },
     {
-      value: 12,
+      value: 3,
       timestamp: getPastDate(24),
+      comment: "Three in a row!",
+    },
+    {
+      value: 3,
+      timestamp: getPastDate(23),
       comment: "",
     },
     {
-      value: 13,
-      timestamp: getPastDate(23),
-      comment: "Two weeks in!",
-    },
-    {
-      value: 14,
+      value: 3,
       timestamp: getPastDate(22),
       comment: "",
     },
     {
-      value: 15,
+      value: 4,
       timestamp: getPastDate(21),
+      comment: "Getting stronger",
+    },
+    {
+      value: 4,
+      timestamp: getPastDate(20),
       comment: "",
     },
+    // Gap day 19 - sore arms
     {
-      value: 16,
-      timestamp: getPastDate(20),
-      comment: "Back to it",
-    },
-    // Gap day 19 - sick day
-    {
-      value: 17,
+      value: 3,
       timestamp: getPastDate(18),
-      comment: "Feeling the burn 🔥",
+      comment: "Arms still sore, took it easy",
     },
     {
-      value: 18,
+      value: 4,
       timestamp: getPastDate(17),
       comment: "",
     },
     {
-      value: 19,
+      value: 5,
       timestamp: getPastDate(16),
+      comment: "Halfway to 10! 🎯",
+    },
+    {
+      value: 5,
+      timestamp: getPastDate(15),
       comment: "",
     },
     {
-      value: 20,
-      timestamp: getPastDate(15),
-      comment: "Halfway to my goal!",
-    },
-    {
-      value: 21,
+      value: 5,
       timestamp: getPastDate(14),
       comment: "",
     },
     {
-      value: 22,
+      value: 6,
       timestamp: getPastDate(13),
-      comment: "Monday motivation",
+      comment: "New record!",
     },
     // Gap days 11-12 - weekend break
     {
-      value: 23,
+      value: 6,
       timestamp: getPastDate(10),
       comment: "",
     },
     {
-      value: 24,
+      value: 7,
       timestamp: getPastDate(9),
+      comment: "Seven feels amazing!",
+    },
+    {
+      value: 6,
+      timestamp: getPastDate(8),
       comment: "",
     },
     {
-      value: 25,
-      timestamp: getPastDate(8),
-      comment: "Weekly goal reached!",
-    },
-    {
-      value: 26,
+      value: 7,
       timestamp: getPastDate(7),
       comment: "",
     },
     {
-      value: 27,
+      value: 8,
       timestamp: getPastDate(6),
-      comment: "",
+      comment: "Almost at 10! 🔥",
     },
     {
-      value: 29,
+      value: 8,
       timestamp: getPastDate(5),
-      comment: "Back after rest day",
+      comment: "",
     },
     // Gap day 4 - rest day
     {
-      value: 28,
+      value: 9,
       timestamp: getPastDate(3),
-      comment: "",
+      comment: "So close to double digits!",
     },
     {
-      value: 30,
+      value: 9,
       timestamp: getPastDate(2),
-      comment: "Good form today",
-    },
-    {
-      value: 32,
-      timestamp: getPastDate(1),
       comment: "",
     },
     {
-      value: 35,
-      timestamp: getPastDate(0),
-      comment: "New personal best! Feeling strong 💪",
+      value: 10,
+      timestamp: getPastDate(1),
+      comment: "Double digits! 🎉",
     },
   ],
 };

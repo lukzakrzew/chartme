@@ -44,12 +44,21 @@ if (import.meta.env.DEV) {
     console.log("✅ Shifted all logs one day later");
   };
 
+  (window as any).debugResetAndLoadTestData = () => {
+    const logsStore = useLogsStore();
+    logsStore.debugResetAndLoadTestData();
+    console.log("✅ Cleared all data and loaded test data");
+  };
+
   console.log("🔧 Debug functions available:");
   console.log(
     "  debugShiftLogs(days) - Shift all logs by N days (negative for past)"
   );
   console.log("  debugShiftLogsBack() - Shift all logs one day earlier");
   console.log("  debugShiftLogsForward() - Shift all logs one day later");
+  console.log(
+    "  debugResetAndLoadTestData() - Clear all data and load test data"
+  );
   console.log(
     "  Example: debugShiftLogs(-1) to shift all logs one day earlier"
   );

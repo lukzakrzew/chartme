@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import type { LogValue } from "@/types";
 
 interface Props {
@@ -7,6 +8,8 @@ interface Props {
 }
 
 const { logValues } = defineProps<Props>();
+const router = useRouter();
+const route = useRoute();
 
 // Track which comments are expanded in the log history
 const expandedComments = ref(new Set<string>());
@@ -18,11 +21,21 @@ const toggleCommentVisibility = (timestamp: string) => {
     expandedComments.value.add(timestamp);
   }
 };
+
+const goToChart = () => {
+  const logTypeName = route.params.logTypeName as string;
+  router.push(`/chart/${logTypeName}`);
+};
 </script>
 
 <template>
   <div class="bottom-half">
-    <h5>Log History</h5>
+    <div class="history-header">
+      <h5>Log History</h5>
+      <button class="chart-button" @click="goToChart" title="View Chart">
+        📊
+      </button>
+    </div>
     <div class="log-values-list">
       <div v-if="logValues.length === 0" class="no-logs">
         No log entries yet
@@ -76,6 +89,33 @@ const toggleCommentVisibility = (timestamp: string) => {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.history-header h5 {
+  margin: 0;
+}
+
+.chart-button {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 1.2em;
+  transition: all 0.2s;
+}
+
+.chart-button:hover {
+  background-color: #f5f5f5;
+  border-color: #ccc;
+  transform: scale(1.05);
 }
 
 .log-values-list {

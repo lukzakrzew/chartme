@@ -3,6 +3,11 @@ import store from "store2";
 import { defineStore } from "pinia";
 import { ref, type Ref } from "vue";
 
+// Import test data
+import { logTypes as testLogTypes } from "@/testData/logTypes";
+import { logsPushups } from "@/testData/logs-pushups";
+import { logsPullups } from "@/testData/logs-pullups";
+
 export const LocalStorageKeys = {
   logTypes: "logTypes",
   logsPrefix: "logs-",
@@ -76,6 +81,40 @@ export const useLogsStore = defineStore("logs", () => {
     shiftAllLogsDays(1);
   }
 
+  function debugResetAndLoadTestData() {
+    // Clear all localStorage data
+    store.clear();
+
+    // Clear reactive refs
+    logValuesRefs.clear();
+
+    // Load test log types
+    logTypes.value = [...testLogTypes];
+    store.set(LocalStorageKeys.logTypes, logTypes.value);
+
+    // Load test log data
+    const testLogData = [logsPushups, logsPullups];
+
+    testLogData.forEach((testLog) => {
+      // Store in localStorage
+      store.set(
+        `${LocalStorageKeys.logsPrefix}${testLog.name}`,
+        testLog.values
+      );
+
+      // Update reactive refs
+      logValuesRefs.set(testLog.name, ref<LogValue[]>([...testLog.values]));
+    });
+
+    console.log("Cleared all data and loaded test data:", {
+      logTypes: logTypes.value.length,
+      logData: testLogData.map((log) => ({
+        name: log.name,
+        values: log.values.length,
+      })),
+    });
+  }
+
   return {
     logTypes,
     addLogType,
@@ -86,5 +125,6 @@ export const useLogsStore = defineStore("logs", () => {
     debugShiftLogsOneDayEarlier,
     debugShiftLogsOneDayLater,
     shiftAllLogsDays,
+    debugResetAndLoadTestData,
   };
 });
