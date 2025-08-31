@@ -39,6 +39,14 @@ export const useLogsStore = defineStore("logs", () => {
     return categories.value.find((c) => c.name === name);
   }
 
+  function updateCategory(oldName: string, updatedCategory: Category) {
+    const index = categories.value.findIndex((c) => c.name === oldName);
+    if (index !== -1) {
+      categories.value[index] = updatedCategory;
+      store.set(LocalStorageKeys.categories, categories.value);
+    }
+  }
+
   function getLogValues(name: string): Ref<LogValue[]> {
     if (!logValuesRefs.has(name)) {
       // Initialize ref with data from localStorage
@@ -135,6 +143,7 @@ export const useLogsStore = defineStore("logs", () => {
     getLogType,
     addCategory,
     getCategory,
+    updateCategory,
     getLogValues,
     addLogValue,
     // Debug methods

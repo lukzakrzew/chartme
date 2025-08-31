@@ -19,7 +19,6 @@ app.use(Quasar, {
 });
 app.use(router);
 app.use(pinia);
-console.log("use pinia");
 
 app.mount("#app");
 
