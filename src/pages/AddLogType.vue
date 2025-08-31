@@ -1,56 +1,82 @@
 <template>
   <q-page class="q-pa-md">
-    <q-form @submit="onSubmit" @reset="onReset" class="q-gutter-md">
-      <q-input
-        v-model="form.name"
-        label="Name"
-        :rules="[
-          (val) => !!val || 'Name is required',
-          (val) =>
-            validateName(val) ||
-            'Name can only contain letters, digits, and spaces',
-        ]"
-        required
-      />
+    <q-card class="q-pa-lg">
+      <q-card-section>
+        <div class="text-h6 q-mb-md">Create Log Type</div>
 
-      <q-input v-model="form.desc" label="description" type="textarea" />
+        <q-form @submit="onSubmit" @reset="onReset" class="q-gutter-md">
+          <q-input
+            v-model="form.name"
+            label="Name"
+            outlined
+            :rules="[
+              (val) => !!val || 'Name is required',
+              (val) =>
+                validateName(val) ||
+                'Name can only contain letters, digits, and spaces',
+            ]"
+            required
+          />
 
-      <q-select
-        v-model="form.type"
-        label="Type"
-        :options="Object.values(LOG_TYPES)"
-        :rules="[(val) => !!val || 'Type is required']"
-        required
-        @input-value="onTypeChange"
-      />
+          <q-input
+            v-model="form.desc"
+            label="Description"
+            type="textarea"
+            outlined
+            rows="3"
+            placeholder="Optional description..."
+          />
 
-      <q-input
-        v-model.number="form.min"
-        label="Min"
-        type="number"
-        :disable="form.type === LOG_TYPES.boolean"
-      />
+          <q-select
+            v-model="form.type"
+            label="Type"
+            :options="Object.values(LOG_TYPES)"
+            :rules="[(val) => !!val || 'Type is required']"
+            required
+            outlined
+            @input-value="onTypeChange"
+          />
 
-      <q-input
-        v-model.number="form.max"
-        label="Max"
-        type="number"
-        :disable="form.type === LOG_TYPES.boolean"
-      />
+          <q-toggle
+            v-model="form.zeroToTen"
+            label="Zero to ten scale"
+            :disable="form.type === LOG_TYPES.boolean"
+          />
 
-      <div class="row q-gutter-sm">
-        <q-btn label="Submit" color="primary" type="submit" />
-        <q-btn label="Reset" color="secondary" type="reset" flat />
-      </div>
-      <div class="error-message">
-        {{ errorMessage }}
-      </div>
-    </q-form>
+          <q-select
+            v-model="form.category"
+            label="Category (Optional)"
+            :options="categoryOptions"
+            option-value="name"
+            option-label="name"
+            clearable
+            emit-value
+            map-options
+            outlined
+          />
+
+          <div class="row q-gutter-sm q-mt-md justify-center">
+            <q-btn
+              label="Save Log Type"
+              color="primary"
+              type="submit"
+              icon="save"
+            />
+            <q-btn label="Cancel" color="grey" flat @click="onCancel" />
+            <q-btn label="Reset" color="orange" flat type="reset" />
+          </div>
+
+          <div v-if="errorMessage" class="text-negative q-mt-md">
+            {{ errorMessage }}
+          </div>
+        </q-form>
+      </q-card-section>
+    </q-card>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { reactive, ref, computed } from "vue";
 import { LOG_TYPES } from "@/constants.ts";
 import { useRouter } from "vue-router";
 import { useLogsStore } from "@/stores/Logs";
@@ -62,15 +88,16 @@ const form = reactive({
   name: "",
   desc: "",
   type: LOG_TYPES.number as LOG_TYPES,
-  min: undefined as number | undefined,
-  max: undefined as number | undefined,
+  zeroToTen: false,
+  category: undefined as string | undefined,
 });
 const errorMessage = ref("");
 
+const categoryOptions = computed(() => logsStore.categories);
+
 function onTypeChange(type: string) {
   if (type === LOG_TYPES.boolean) {
-    form.min = undefined;
-    form.max = undefined;
+    form.zeroToTen = false;
   }
 }
 
@@ -92,29 +119,37 @@ function onSubmit() {
     errorMessage.value = "Log type with this name already exists";
     return;
   }
-  if (
-    form.type === LOG_TYPES.number &&
-    typeof form.min === "number" &&
-    typeof form.max === "number" &&
-    form?.min > form?.max
-  ) {
-    errorMessage.value = "Min value cannot be greateer than max";
-    return;
-  }
+
   logsStore.addLogType({
     name: form.name,
     type: form.type,
     desc: form.desc,
-    min: form.min,
-    max: form.max,
+    frequency: 1, // Default frequency
+    zeroToTen: form.zeroToTen,
+    category: form.category,
+    aggrs: {}, // Initialize empty aggregations
+    archived: false, // Default to not archived
   });
   router.push({ path: "/" });
 }
 
 function onReset() {
   form.name = "";
+  form.desc = "";
   form.type = LOG_TYPES.number;
-  form.min = undefined;
-  form.max = undefined;
+  form.zeroToTen = false;
+  form.category = undefined;
+  errorMessage.value = "";
+}
+
+function onCancel() {
+  router.push({ path: "/" });
 }
 </script>
+
+<style scoped>
+.q-card {
+  max-width: 600px;
+  margin: 0 auto;
+}
+</style>

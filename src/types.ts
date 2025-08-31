@@ -5,8 +5,8 @@ export type LogType = {
   type: LOG_TYPES;
   desc: string;
   frequency: number;
-  min?: number;
-  max?: number;
+  zeroToTen: boolean;
+  category?: string;
   aggrs: {
     weekAvg?: number;
     monthAvg?: number;

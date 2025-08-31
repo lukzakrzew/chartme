@@ -65,7 +65,7 @@
           </div>
         </div>
 
-        <div class="row q-gutter-sm q-mt-md">
+        <div class="row q-gutter-sm q-mt-md justify-center">
           <q-btn
             :label="isEditMode ? 'Update Category' : 'Save Category'"
             color="primary"
