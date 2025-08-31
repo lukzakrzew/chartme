@@ -43,6 +43,31 @@
             :disable="form.type === LOG_TYPES.boolean"
           />
 
+          <div>
+            <div class="text-subtitle2 q-mb-sm">Frequency</div>
+            <q-option-group
+              v-model="frequencyOption"
+              :options="frequencyOptions"
+              type="radio"
+              inline
+              @input="onFrequencyOptionChange"
+            />
+            <q-input
+              v-if="frequencyOption === 'custom'"
+              v-model.number="form.frequency"
+              label="Custom frequency (days)"
+              type="number"
+              outlined
+              :rules="[
+                (val) => val > 0 || 'Frequency must be greater than 0',
+                (val) =>
+                  Number.isInteger(val) || 'Frequency must be a whole number',
+              ]"
+              class="q-mt-sm"
+              min="1"
+            />
+          </div>
+
           <q-select
             v-model="form.category"
             label="Category (Optional)"
@@ -88,17 +113,34 @@ const form = reactive({
   name: "",
   desc: "",
   type: LOG_TYPES.number as LOG_TYPES,
+  frequency: 1,
   zeroToTen: false,
   category: undefined as string | undefined,
 });
 const errorMessage = ref("");
+const frequencyOption = ref("daily");
 
 const categoryOptions = computed(() => logsStore.categories);
+
+const frequencyOptions = [
+  { label: "Daily", value: "daily" },
+  { label: "Weekly", value: "weekly" },
+  { label: "Custom", value: "custom" },
+];
 
 function onTypeChange(type: string) {
   if (type === LOG_TYPES.boolean) {
     form.zeroToTen = false;
   }
+}
+
+function onFrequencyOptionChange(option: string) {
+  if (option === "daily") {
+    form.frequency = 1;
+  } else if (option === "weekly") {
+    form.frequency = 7;
+  }
+  // For custom, we keep whatever value is in the frequency field
 }
 
 function validateName(name: string): boolean {
@@ -120,11 +162,20 @@ function onSubmit() {
     return;
   }
 
+  // Validate frequency for custom option
+  if (
+    frequencyOption.value === "custom" &&
+    (!form.frequency || form.frequency <= 0)
+  ) {
+    errorMessage.value = "Please enter a valid custom frequency greater than 0";
+    return;
+  }
+
   logsStore.addLogType({
     name: form.name,
     type: form.type,
     desc: form.desc,
-    frequency: 1, // Default frequency
+    frequency: form.frequency,
     zeroToTen: form.zeroToTen,
     category: form.category,
     aggrs: {}, // Initialize empty aggregations
@@ -137,8 +188,10 @@ function onReset() {
   form.name = "";
   form.desc = "";
   form.type = LOG_TYPES.number;
+  form.frequency = 1;
   form.zeroToTen = false;
   form.category = undefined;
+  frequencyOption.value = "daily";
   errorMessage.value = "";
 }
 
