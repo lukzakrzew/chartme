@@ -60,6 +60,10 @@ const navigateToFillInAll = () => {
 const navigateToAddLogType = () => {
   router.push("/add-log-type");
 };
+
+const navigateToEditLogType = (logTypeName: string) => {
+  router.push(`/edit-log-type/${encodeURIComponent(logTypeName)}`);
+};
 </script>
 
 <template>
@@ -100,6 +104,14 @@ const navigateToAddLogType = () => {
                 </span>
               </div>
             </div>
+            <q-btn
+              icon="edit"
+              size="sm"
+              flat
+              round
+              class="edit-btn"
+              @click.stop="navigateToEditLogType(logType.name)"
+            />
           </div>
           <q-icon name="chevron_right" class="chevron-icon" />
         </div>
@@ -220,6 +232,15 @@ const navigateToAddLogType = () => {
 .category-icon {
   font-size: 1.5em;
   opacity: 0.8;
+}
+
+.edit-btn {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.edit-btn:hover {
+  opacity: 1;
 }
 
 .log-type-info {

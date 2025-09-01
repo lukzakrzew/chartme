@@ -30,6 +30,14 @@ export const useLogsStore = defineStore("logs", () => {
     return logTypes.value.find((lt) => lt.name === name);
   }
 
+  function updateLogType(oldName: string, updatedLogType: LogType) {
+    const index = logTypes.value.findIndex((lt) => lt.name === oldName);
+    if (index !== -1) {
+      logTypes.value[index] = updatedLogType;
+      store.set(LocalStorageKeys.logTypes, logTypes.value);
+    }
+  }
+
   function addCategory(category: Category) {
     categories.value.push(category);
     store.set(LocalStorageKeys.categories, categories.value);
@@ -244,6 +252,7 @@ export const useLogsStore = defineStore("logs", () => {
     categories,
     addLogType,
     getLogType,
+    updateLogType,
     addCategory,
     getCategory,
     updateCategory,

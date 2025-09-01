@@ -13,6 +13,7 @@ import Chart from "@/pages/Chart.vue";
 const routes: RouteRecordRaw[] = [
   { path: "/", component: LogTypes },
   { path: "/add-log-type", component: AddLogType },
+  { path: "/edit-log-type/:logTypeName", component: AddLogType, props: true },
   { path: "/add-category", component: AddCategory },
   { path: "/log/:logTypeName", component: AddLog, props: true },
   { path: "/chart/:logTypeName", component: Chart, props: true },

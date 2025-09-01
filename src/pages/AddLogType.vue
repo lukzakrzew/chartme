@@ -2,7 +2,9 @@
   <q-page class="q-pa-md">
     <q-card class="q-pa-lg">
       <q-card-section>
-        <div class="text-h6 q-mb-md">Create Log Type</div>
+        <div class="text-h6 q-mb-md">
+          {{ isEditMode ? "Edit Log Type" : "Create Log Type" }}
+        </div>
 
         <q-form @submit="onSubmit" @reset="onReset" class="q-gutter-md">
           <q-input
@@ -82,10 +84,10 @@
 
           <div class="row q-gutter-sm q-mt-md justify-center">
             <q-btn
-              label="Save Log Type"
+              :label="isEditMode ? 'Update Log Type' : 'Save Log Type'"
               color="primary"
               type="submit"
-              icon="save"
+              :icon="isEditMode ? 'edit' : 'save'"
             />
             <q-btn label="Cancel" color="grey" flat @click="onCancel" />
             <q-btn label="Reset" color="orange" flat type="reset" />
@@ -101,13 +103,26 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed } from "vue";
+import { reactive, ref, computed, onMounted } from "vue";
 import { LOG_TYPES } from "@/constants.ts";
 import { useRouter } from "vue-router";
 import { useLogsStore } from "@/stores/Logs";
+import type { LogType } from "@/types";
+
+interface Props {
+  logTypeName?: string;
+}
+
+const props = defineProps<Props>();
 
 const router = useRouter();
 const logsStore = useLogsStore();
+
+// Determine if we're in edit mode
+const isEditMode = computed(() => !!props.logTypeName);
+
+// Store the original name for update operations
+const originalName = ref("");
 
 const form = reactive({
   name: "",
@@ -119,6 +134,32 @@ const form = reactive({
 });
 const errorMessage = ref("");
 const frequencyOption = ref("daily");
+
+// Populate form with existing log type data in edit mode
+onMounted(() => {
+  if (isEditMode.value && props.logTypeName) {
+    const existingLogType = logsStore.getLogType(props.logTypeName);
+    if (existingLogType) {
+      form.name = existingLogType.name;
+      form.desc = existingLogType.desc || "";
+      form.type = existingLogType.type;
+      form.frequency = existingLogType.frequency;
+      form.zeroToTen = existingLogType.zeroToTen || false;
+      form.category = existingLogType.category;
+
+      originalName.value = existingLogType.name;
+
+      // Set frequency option based on frequency value
+      if (form.frequency === 1) {
+        frequencyOption.value = "daily";
+      } else if (form.frequency === 7) {
+        frequencyOption.value = "weekly";
+      } else {
+        frequencyOption.value = "custom";
+      }
+    }
+  }
+});
 
 const categoryOptions = computed(() => logsStore.categories);
 
@@ -156,8 +197,9 @@ function onSubmit() {
     return;
   }
 
+  // Check for duplicates, but allow the same name if we're editing the same log type
   const duplicate = logsStore.getLogType(form.name);
-  if (duplicate) {
+  if (duplicate && (!isEditMode.value || form.name !== originalName.value)) {
     errorMessage.value = "Log type with this name already exists";
     return;
   }
@@ -171,16 +213,34 @@ function onSubmit() {
     return;
   }
 
-  logsStore.addLogType({
-    name: form.name,
-    type: form.type,
-    desc: form.desc,
-    frequency: form.frequency,
-    zeroToTen: form.zeroToTen,
-    category: form.category,
-    aggrs: {}, // Initialize empty aggregations
-    archived: false, // Default to not archived
-  });
+  if (isEditMode.value) {
+    // Update existing log type
+    const updatedLogType: LogType = {
+      name: form.name,
+      type: form.type,
+      desc: form.desc,
+      frequency: form.frequency,
+      zeroToTen: form.zeroToTen,
+      category: form.category,
+      aggrs: {}, // Keep existing aggregates
+      archived: false, // Default to not archived
+    };
+
+    logsStore.updateLogType(originalName.value, updatedLogType);
+  } else {
+    // Create new log type
+    logsStore.addLogType({
+      name: form.name,
+      type: form.type,
+      desc: form.desc,
+      frequency: form.frequency,
+      zeroToTen: form.zeroToTen,
+      category: form.category,
+      aggrs: {}, // Initialize empty aggregations
+      archived: false, // Default to not archived
+    });
+  }
+
   router.push({ path: "/" });
 }
 
