@@ -7,6 +7,7 @@ export type LogType = {
   frequency: number;
   zeroToTen: boolean;
   category?: string;
+  favorite: boolean;
   aggrs: {
     weekAvg?: number;
     monthAvg?: number;

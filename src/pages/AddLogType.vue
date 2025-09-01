@@ -82,6 +82,12 @@
             outlined
           />
 
+          <q-toggle
+            v-model="form.favorite"
+            label="Add to favorites"
+            icon="star"
+          />
+
           <div class="row q-gutter-sm q-mt-md justify-center">
             <q-btn
               :label="isEditMode ? 'Update Log Type' : 'Save Log Type'"
@@ -131,6 +137,7 @@ const form = reactive({
   frequency: 1,
   zeroToTen: false,
   category: undefined as string | undefined,
+  favorite: false,
 });
 const errorMessage = ref("");
 const frequencyOption = ref("daily");
@@ -146,6 +153,7 @@ onMounted(() => {
       form.frequency = existingLogType.frequency;
       form.zeroToTen = existingLogType.zeroToTen || false;
       form.category = existingLogType.category;
+      form.favorite = existingLogType.favorite || false;
 
       originalName.value = existingLogType.name;
 
@@ -222,6 +230,7 @@ function onSubmit() {
       frequency: form.frequency,
       zeroToTen: form.zeroToTen,
       category: form.category,
+      favorite: form.favorite,
       aggrs: {}, // Keep existing aggregates
       archived: false, // Default to not archived
     };
@@ -236,6 +245,7 @@ function onSubmit() {
       frequency: form.frequency,
       zeroToTen: form.zeroToTen,
       category: form.category,
+      favorite: form.favorite,
       aggrs: {}, // Initialize empty aggregations
       archived: false, // Default to not archived
     });
@@ -251,6 +261,7 @@ function onReset() {
   form.frequency = 1;
   form.zeroToTen = false;
   form.category = undefined;
+  form.favorite = false;
   frequencyOption.value = "daily";
   errorMessage.value = "";
 }

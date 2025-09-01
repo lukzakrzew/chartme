@@ -27,7 +27,8 @@ const formatTimeAgo = (timestamp: string) => {
 
 // Enhanced log types with category info, last value and time ago
 const enhancedLogTypes = computed(() => {
-  return logTypes.value.map((logType) => {
+  // First, map all log types with enhanced data
+  const enhanced = logTypes.value.map((logType) => {
     // Get category info
     const category = logType.category
       ? logsStore.getCategory(logType.category)
@@ -47,6 +48,16 @@ const enhancedLogTypes = computed(() => {
       frequencyDisplay: `1/${logType.frequency}`,
     };
   });
+
+  // Sort: favorites first, then by name
+  return enhanced.sort((a, b) => {
+    // Favorites come first
+    if (a.favorite && !b.favorite) return -1;
+    if (!a.favorite && b.favorite) return 1;
+
+    // If both are favorites or both are not, sort by name
+    return a.name.localeCompare(b.name);
+  });
 });
 
 const navigateToAddLog = (logTypeName: string) => {
@@ -64,6 +75,29 @@ const navigateToAddLogType = () => {
 const navigateToEditLogType = (logTypeName: string) => {
   router.push(`/edit-log-type/${encodeURIComponent(logTypeName)}`);
 };
+
+const toggleFavorite = (logTypeName: string) => {
+  logsStore.toggleFavorite(logTypeName);
+};
+
+// Calculate log status based on frequency and last log time
+const getLogStatus = (logType: any) => {
+  if (!logType.aggrs?.lastTime) {
+    return "default"; // No logs yet
+  }
+
+  const now = new Date();
+  const lastLogDate = new Date(logType.aggrs.lastTime);
+  const daysSinceLastLog = Math.floor(
+    (now.getTime() - lastLogDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (daysSinceLastLog <= logType.frequency) {
+    return "green"; // Within frequency period
+  } else {
+    return "red"; // Overdue
+  }
+};
 </script>
 
 <template>
@@ -80,7 +114,7 @@ const navigateToEditLogType = (logTypeName: string) => {
     <div class="log-type-list">
       <div
         v-for="logType in enhancedLogTypes"
-        class="log-type"
+        :class="['log-type', `log-type-${getLogStatus(logType)}`]"
         @click="navigateToAddLog(logType.name)"
       >
         <div class="log-type-content">
@@ -104,6 +138,15 @@ const navigateToEditLogType = (logTypeName: string) => {
                 </span>
               </div>
             </div>
+            <q-btn
+              :icon="logType.favorite ? 'star' : 'star_border'"
+              :color="logType.favorite ? 'amber' : 'grey-6'"
+              size="sm"
+              flat
+              round
+              class="favorite-btn"
+              @click.stop="toggleFavorite(logType.name)"
+            />
             <q-btn
               icon="edit"
               size="sm"
@@ -216,6 +259,27 @@ const navigateToEditLogType = (logTypeName: string) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Status-based background colors */
+.log-type-green {
+  background-color: #e8f5e8;
+  border-color: #4caf50;
+}
+
+.log-type-green:hover {
+  background-color: #c8e6c9;
+  border-color: #388e3c;
+}
+
+.log-type-red {
+  background-color: #ffebee;
+  border-color: #f44336;
+}
+
+.log-type-red:hover {
+  background-color: #ffcdd2;
+  border-color: #d32f2f;
+}
+
 .log-type-content {
   display: flex;
   justify-content: space-between;
@@ -232,6 +296,17 @@ const navigateToEditLogType = (logTypeName: string) => {
 .category-icon {
   font-size: 1.5em;
   opacity: 0.8;
+}
+
+.favorite-btn {
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  margin-right: 4px;
+}
+
+.favorite-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .edit-btn {
