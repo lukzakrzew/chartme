@@ -13,6 +13,7 @@ export type LogType = {
     threeMonthAvg?: number;
     totalAvg?: number;
     lastTime?: string;
+    lastValue?: boolean | number;
   };
   archived: boolean;
 };

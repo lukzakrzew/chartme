@@ -7,7 +7,25 @@ const logsStore = useLogsStore();
 const router = useRouter();
 const logTypes = computed(() => logsStore.logTypes);
 
-// Enhanced log types with category info and last log date
+// Format time ago
+const formatTimeAgo = (timestamp: string) => {
+  const now = new Date();
+  const logDate = new Date(timestamp);
+  const diffInMs = now.getTime() - logDate.getTime();
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInMinutes < 1) return "Just now";
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+
+  // For older dates, show the date
+  return logDate.toLocaleDateString();
+};
+
+// Enhanced log types with category info, last value and time ago
 const enhancedLogTypes = computed(() => {
   return logTypes.value.map((logType) => {
     // Get category info
@@ -15,19 +33,17 @@ const enhancedLogTypes = computed(() => {
       ? logsStore.getCategory(logType.category)
       : null;
 
-    // Get last log date
-    const logValues = logsStore.getLogValues(logType.name).value;
-    const lastLog =
-      logValues.length > 0 ? logValues[logValues.length - 1] : null;
-    const lastLogDate = lastLog
-      ? new Date(lastLog.timestamp).toLocaleDateString()
-      : null;
+    // Get aggregates data
+    const lastTime = logType.aggrs?.lastTime;
+    const lastValue = logType.aggrs?.lastValue;
+    const timeAgo = lastTime ? formatTimeAgo(lastTime) : null;
 
     return {
       ...logType,
       categoryIcon: category?.icon || "category",
       categoryColor: category?.color || "grey",
-      lastLogDate,
+      lastValue,
+      timeAgo,
       frequencyDisplay: `1/${logType.frequency}`,
     };
   });
@@ -75,10 +91,13 @@ const navigateToAddLogType = () => {
               <div class="log-type-name">{{ logType.name }}</div>
               <div class="log-type-meta">
                 <span class="frequency">{{ logType.frequencyDisplay }}</span>
-                <span v-if="logType.lastLogDate" class="last-log">
-                  Last: {{ logType.lastLogDate }}
+                <span v-if="logType.timeAgo" class="last-log">
+                  {{ logType.timeAgo }}
                 </span>
                 <span v-else class="no-logs">No logs yet</span>
+                <span v-if="logType.lastValue !== undefined" class="last-value">
+                  Value: {{ logType.lastValue }}
+                </span>
               </div>
             </div>
           </div>
@@ -238,6 +257,14 @@ const navigateToAddLogType = () => {
 .no-logs {
   color: #ff9800;
   font-style: italic;
+}
+
+.last-value {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 .chevron-icon {

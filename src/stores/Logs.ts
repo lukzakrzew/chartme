@@ -65,6 +65,94 @@ export const useLogsStore = defineStore("logs", () => {
 
     // Save to localStorage
     store.set(`${LocalStorageKeys.logsPrefix}${name}`, logValuesRef.value);
+
+    // Recalculate aggregates for this log type
+    recalculateAggregates(name);
+  }
+
+  // Calculate aggregates for a specific log type
+  function recalculateAggregates(logTypeName: string) {
+    const logTypeIndex = logTypes.value.findIndex(
+      (lt) => lt.name === logTypeName
+    );
+    if (logTypeIndex === -1) return;
+
+    const logValues = getLogValues(logTypeName).value;
+    if (logValues.length === 0) return;
+
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+    // Get last log timestamp and value
+    const lastLog = logValues[logValues.length - 1];
+    const lastTime = lastLog.timestamp;
+    const lastValue = lastLog.value;
+
+    // Filter values by time periods (only for number values, skip boolean)
+    const allValues = logValues
+      .filter((lv) => typeof lv.value === "number")
+      .map((lv) => lv.value as number);
+    const weekValues = logValues
+      .filter((lv) => {
+        const logDate = new Date(lv.timestamp);
+        return logDate >= oneWeekAgo && typeof lv.value === "number";
+      })
+      .map((lv) => lv.value as number);
+
+    const monthValues = logValues
+      .filter((lv) => {
+        const logDate = new Date(lv.timestamp);
+        return logDate >= oneMonthAgo && typeof lv.value === "number";
+      })
+      .map((lv) => lv.value as number);
+
+    const threeMonthValues = logValues
+      .filter((lv) => {
+        const logDate = new Date(lv.timestamp);
+        return logDate >= threeMonthsAgo && typeof lv.value === "number";
+      })
+      .map((lv) => lv.value as number);
+
+    // Calculate averages
+    const weekAvg =
+      weekValues.length > 0
+        ? weekValues.reduce((sum, val) => sum + val, 0) / weekValues.length
+        : undefined;
+    const monthAvg =
+      monthValues.length > 0
+        ? monthValues.reduce((sum, val) => sum + val, 0) / monthValues.length
+        : undefined;
+    const threeMonthAvg =
+      threeMonthValues.length > 0
+        ? threeMonthValues.reduce((sum, val) => sum + val, 0) /
+          threeMonthValues.length
+        : undefined;
+    const totalAvg =
+      allValues.length > 0
+        ? allValues.reduce((sum, val) => sum + val, 0) / allValues.length
+        : undefined;
+
+    // Update the log type with new aggregates
+    logTypes.value[logTypeIndex].aggrs = {
+      weekAvg,
+      monthAvg,
+      threeMonthAvg,
+      totalAvg,
+      lastTime,
+      lastValue,
+    };
+
+    // Save updated log types to localStorage
+    store.set(LocalStorageKeys.logTypes, logTypes.value);
+  }
+
+  // Recalculate aggregates for all log types (useful for initialization or data migration)
+  function recalculateAllAggregates() {
+    logTypes.value.forEach((logType) => {
+      recalculateAggregates(logType.name);
+    });
   }
 
   // DEBUG METHODS (remove in production)
@@ -127,12 +215,27 @@ export const useLogsStore = defineStore("logs", () => {
       logValuesRefs.set(testLog.name, ref<LogValue[]>([...testLog.values]));
     });
 
+    // Recalculate aggregates for all loaded log types
+    recalculateAllAggregates();
+
     console.log("Cleared all data and loaded test data:", {
       logTypes: logTypes.value.length,
       logData: testLogData.map((log) => ({
         name: log.name,
         values: log.values.length,
       })),
+    });
+  }
+
+  // Initialize aggregates for existing data if they don't exist
+  if (logTypes.value.length > 0) {
+    logTypes.value.forEach((logType) => {
+      if (!logType.aggrs || Object.keys(logType.aggrs).length === 0) {
+        const logValues = getLogValues(logType.name).value;
+        if (logValues.length > 0) {
+          recalculateAggregates(logType.name);
+        }
+      }
     });
   }
 
@@ -146,6 +249,8 @@ export const useLogsStore = defineStore("logs", () => {
     updateCategory,
     getLogValues,
     addLogValue,
+    recalculateAggregates,
+    recalculateAllAggregates,
     // Debug methods
     debugShiftLogsOneDayEarlier,
     debugShiftLogsOneDayLater,
