@@ -14,6 +14,10 @@ const navigateToAddLog = (logTypeName: string) => {
 const navigateToFillInAll = () => {
   router.push("/fill-in-all");
 };
+
+const navigateToAddLogType = () => {
+  router.push("/add-log-type");
+};
 </script>
 
 <template>
@@ -36,6 +40,11 @@ const navigateToFillInAll = () => {
         {{ logType.name }}
       </div>
     </div>
+
+    <!-- Floating Action Button -->
+    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+      <q-btn fab icon="add" color="primary" @click="navigateToAddLogType" />
+    </q-page-sticky>
   </div>
 </template>
 
