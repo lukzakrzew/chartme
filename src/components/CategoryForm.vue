@@ -30,12 +30,10 @@
 
         <div>
           <div class="text-subtitle2 q-mb-sm">Icon</div>
-          <q-btn
-            :icon="form.icon"
-            :color="form.color"
-            outline
-            @click="showIconPicker = true"
-            class="full-width q-py-md"
+          <IconPicker
+            v-model="form.icon"
+            :preview-color="form.color"
+            title="Choose Category Icon"
           />
         </div>
 
@@ -87,56 +85,13 @@
         </div>
       </q-form>
     </q-card-section>
-
-    <!-- Icon Picker Modal -->
-    <q-dialog v-model="showIconPicker" persistent>
-      <q-card style="min-width: 400px; max-width: 600px">
-        <q-card-section>
-          <div class="text-h6">Choose an Icon</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          <div class="icon-grid">
-            <q-btn
-              v-for="iconOption in iconOptions"
-              :key="iconOption"
-              :icon="iconOption"
-              :color="form.icon === iconOption ? form.color : form.color"
-              :unelevated="form.icon === iconOption"
-              :outline="form.icon !== iconOption"
-              @click="selectIcon(iconOption)"
-              class="icon-btn"
-              size="lg"
-              round
-            >
-              <q-tooltip>{{ iconOption }}</q-tooltip>
-            </q-btn>
-          </div>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn
-            flat
-            label="Cancel"
-            color="grey"
-            @click="showIconPicker = false"
-          />
-          <q-btn
-            unelevated
-            label="Select"
-            color="primary"
-            @click="showIconPicker = false"
-            :disable="!form.icon"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
   </q-card>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref, defineEmits, defineExpose } from "vue";
 import { useLogsStore } from "@/stores/Logs";
+import IconPicker from "@/components/IconPicker.vue";
 import type { Category } from "@/types";
 
 const emit = defineEmits<{
@@ -154,38 +109,8 @@ const form = reactive({
 });
 
 const errorMessage = ref("");
-const showIconPicker = ref(false);
 const isEditMode = ref(false);
 const editingCategory = ref<string | null>(null);
-
-// Common Material Design icons for categories
-const iconOptions = [
-  "category",
-  "folder",
-  "label",
-  "bookmark",
-  "star",
-  "favorite",
-  "work",
-  "home",
-  "school",
-  "fitness_center",
-  "restaurant",
-  "shopping_cart",
-  "directions_car",
-  "flight",
-  "hotel",
-  "local_hospital",
-  "music_note",
-  "movie",
-  "sports_esports",
-  "camera_alt",
-  "palette",
-  "code",
-  "science",
-  "account_balance",
-  "trending_up",
-];
 
 // Available colors for categories
 const colorOptions = [
@@ -211,10 +136,6 @@ function validateName(name: string): boolean {
   // Allow only letters, digits, and spaces
   const nameRegex = /^[a-zA-Z0-9\s]+$/;
   return nameRegex.test(name) && name.trim().length > 0;
-}
-
-function selectIcon(iconName: string) {
-  form.icon = iconName;
 }
 
 function onSubmit() {
@@ -312,28 +233,6 @@ defineExpose({
 .q-card {
   max-width: 600px;
   margin: 0 auto;
-}
-
-.icon-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
-  gap: 16px;
-  padding: 20px;
-  background: #fafafa;
-  border-radius: 12px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.icon-btn {
-  width: 65px;
-  height: 65px;
-  transition: all 0.2s ease;
-}
-
-.icon-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Color Picker Styles */

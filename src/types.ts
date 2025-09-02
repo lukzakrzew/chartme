@@ -5,7 +5,7 @@ export type LogType = {
   type: LOG_TYPES;
   desc: string;
   frequency: number;
-  zeroToTen: boolean;
+  oneToTen: boolean;
   category?: string;
   favorite: boolean;
   aggrs: {

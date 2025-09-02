@@ -40,8 +40,8 @@
           />
 
           <q-toggle
-            v-model="form.zeroToTen"
-            label="Zero to ten scale"
+            v-model="form.oneToTen"
+            label="One to ten scale"
             :disable="form.type === LOG_TYPES.boolean"
           />
 
@@ -135,7 +135,7 @@ const form = reactive({
   desc: "",
   type: LOG_TYPES.number as LOG_TYPES,
   frequency: 1,
-  zeroToTen: false,
+  oneToTen: false,
   category: undefined as string | undefined,
   favorite: false,
 });
@@ -151,7 +151,7 @@ onMounted(() => {
       form.desc = existingLogType.desc || "";
       form.type = existingLogType.type;
       form.frequency = existingLogType.frequency;
-      form.zeroToTen = existingLogType.zeroToTen || false;
+      form.oneToTen = existingLogType.oneToTen || false;
       form.category = existingLogType.category;
       form.favorite = existingLogType.favorite || false;
 
@@ -179,7 +179,7 @@ const frequencyOptions = [
 
 function onTypeChange(type: string) {
   if (type === LOG_TYPES.boolean) {
-    form.zeroToTen = false;
+    form.oneToTen = false;
   }
 }
 
@@ -228,7 +228,7 @@ function onSubmit() {
       type: form.type,
       desc: form.desc,
       frequency: form.frequency,
-      zeroToTen: form.zeroToTen,
+      oneToTen: form.oneToTen,
       category: form.category,
       favorite: form.favorite,
       aggrs: {}, // Keep existing aggregates
@@ -243,7 +243,7 @@ function onSubmit() {
       type: form.type,
       desc: form.desc,
       frequency: form.frequency,
-      zeroToTen: form.zeroToTen,
+      oneToTen: form.oneToTen,
       category: form.category,
       favorite: form.favorite,
       aggrs: {}, // Initialize empty aggregations
@@ -259,7 +259,7 @@ function onReset() {
   form.desc = "";
   form.type = LOG_TYPES.number;
   form.frequency = 1;
-  form.zeroToTen = false;
+  form.oneToTen = false;
   form.category = undefined;
   form.favorite = false;
   frequencyOption.value = "daily";

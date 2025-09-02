@@ -15,11 +15,17 @@ const emit = defineEmits<{
   submit: [logValue: LogValue];
 }>();
 
-// Reactive computed for number buttons based on last logged value
+// Reactive computed for number buttons based on oneToTen setting and last logged value
 const computedNumberButtons = computed((): number[] => {
+  // If oneToTen is true, always show buttons from 1 to 10
+  if (props.logType.oneToTen) {
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  }
+
+  // If oneToTen is false, show 4 less, last value, and 4 more
   if (!props.logValues || props.logValues.length === 0) {
-    // Default values if no logs exist
-    return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    // Default values if no logs exist: show 1-10 but shifted to avoid 0
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   }
 
   // Find the last numeric value
@@ -30,23 +36,17 @@ const computedNumberButtons = computed((): number[] => {
 
   const baseValue = lastNumericValue ? (lastNumericValue.value as number) : 5;
 
-  // Create 11 buttons around the base value, but adjust range when hitting boundaries
-  const totalButtons = 11;
-  let startOffset = -5;
-  let endOffset = 5;
-
-  // If we would have too many values below 0, shift the range upward
-  const wouldHaveNegatives = baseValue + startOffset < 0;
-  if (wouldHaveNegatives) {
-    const negativeCount = Math.abs(baseValue + startOffset);
-    startOffset += negativeCount;
-    endOffset += negativeCount;
-  }
-
+  // Create buttons: 4 less, base value, 5 greater
+  // If there aren't 4 less (would go below 0), add more greater values
   const buttons: number[] = [];
-  for (let i = startOffset; i <= endOffset; i++) {
-    const value = Math.max(0, baseValue + i);
-    buttons.push(value);
+  const minValue = Math.max(0, baseValue - 4);
+
+  // If we had to adjust minValue up, add extra values to the higher end
+  const adjustment = baseValue - 4 - minValue;
+  const maxValue = baseValue + 5 + adjustment;
+
+  for (let i = minValue; i <= maxValue; i++) {
+    buttons.push(i);
   }
 
   // Remove duplicates (in case of edge cases) and sort

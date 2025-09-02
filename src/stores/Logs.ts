@@ -5,6 +5,7 @@ import { ref, type Ref } from "vue";
 
 // Import test data
 import { logTypes as testLogTypes } from "@/testData/logTypes";
+import { categories as testCategories } from "@/testData/categories";
 import { logsPushups } from "@/testData/logs-pushups";
 import { logsPullups } from "@/testData/logs-pullups";
 
@@ -217,6 +218,10 @@ export const useLogsStore = defineStore("logs", () => {
     logTypes.value = [...testLogTypes];
     store.set(LocalStorageKeys.logTypes, logTypes.value);
 
+    // Load test categories
+    categories.value = [...testCategories];
+    store.set(LocalStorageKeys.categories, categories.value);
+
     // Load test log data
     const testLogData = [logsPushups, logsPullups];
 
@@ -236,6 +241,7 @@ export const useLogsStore = defineStore("logs", () => {
 
     console.log("Cleared all data and loaded test data:", {
       logTypes: logTypes.value.length,
+      categories: categories.value.length,
       logData: testLogData.map((log) => ({
         name: log.name,
         values: log.values.length,

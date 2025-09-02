@@ -1,14 +1,25 @@
 <script setup lang="ts">
 import { useLogsStore } from "@/stores/Logs";
-import { computed, ref } from "vue";
+import { useSettingsStore } from "@/stores/Settings";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 
 const logsStore = useLogsStore();
+const settingsStore = useSettingsStore();
 const router = useRouter();
 const logTypes = computed(() => logsStore.logTypes);
 
-// Group by categories toggle
-const groupByCategories = ref(false);
+// Group by categories toggle - now from settings store
+const groupByCategories = computed({
+  get: () => settingsStore.settings.groupByCategories,
+  set: (value) => settingsStore.setGroupByCategories(value),
+});
+
+// Show archived toggle - from settings store
+const showArchived = computed({
+  get: () => settingsStore.settings.showArchived,
+  set: (value) => settingsStore.setShowArchived(value),
+});
 
 // Format time ago
 const formatTimeAgo = (timestamp: string) => {
@@ -30,8 +41,13 @@ const formatTimeAgo = (timestamp: string) => {
 
 // Enhanced log types with category info, last value and time ago
 const enhancedLogTypes = computed(() => {
+  // Filter items based on showArchived setting
+  const filteredLogTypes = showArchived.value
+    ? logTypes.value.filter((logType) => logType.archived) // Show only archived when ON
+    : logTypes.value.filter((logType) => !logType.archived); // Show only active when OFF
+
   // First, map all log types with enhanced data
-  const enhanced = logTypes.value.map((logType) => {
+  const enhanced = filteredLogTypes.map((logType) => {
     // Get category info
     const category = logType.category
       ? logsStore.getCategory(logType.category)
@@ -137,19 +153,30 @@ const getLogStatus = (logType: any) => {
 
 <template>
   <div class="page-container">
-    <!-- Fill in all button -->
-    <div class="fill-in-all-container">
-      <button @click="navigateToFillInAll" class="fill-in-all-btn">
-        <span class="icon">✨</span>
-        <span class="text">Fill in all</span>
-      </button>
-    </div>
+    <!-- Controls row -->
+    <div class="controls-row">
+      <!-- Group by categories toggle -->
+      <div class="group-toggle-container">
+        <div class="group-toggle">
+          <span class="toggle-label">Group by categories</span>
+          <q-toggle v-model="groupByCategories" color="primary" size="md" />
+        </div>
+      </div>
 
-    <!-- Group by categories toggle -->
-    <div class="group-toggle-container">
-      <div class="group-toggle">
-        <span class="toggle-label">Group by categories</span>
-        <q-toggle v-model="groupByCategories" color="primary" size="md" />
+      <!-- Show archived toggle -->
+      <div class="show-archived-container">
+        <div class="show-archived-toggle">
+          <span class="toggle-label-small">View archived</span>
+          <q-toggle v-model="showArchived" color="grey-7" size="sm" />
+        </div>
+      </div>
+
+      <!-- Fill in all button -->
+      <div class="fill-in-all-container">
+        <button @click="navigateToFillInAll" class="fill-in-all-btn">
+          <span class="icon">✨</span>
+          <span class="text">Fill in all</span>
+        </button>
       </div>
     </div>
 
@@ -169,7 +196,12 @@ const getLogStatus = (logType: any) => {
               class="category-icon"
             />
             <div class="log-type-info">
-              <div class="log-type-name">{{ logType.name }}</div>
+              <div class="log-type-name">
+                {{ logType.name }}
+                <span v-if="logType.archived" class="archived-label"
+                  >Archived</span
+                >
+              </div>
               <div class="log-type-meta">
                 <span class="frequency">{{ logType.frequencyDisplay }}</span>
                 <span v-if="logType.timeAgo" class="last-log">
@@ -231,7 +263,12 @@ const getLogStatus = (logType: any) => {
             <div class="log-type-content">
               <div class="left-section">
                 <div class="log-type-info">
-                  <div class="log-type-name">{{ logType.name }}</div>
+                  <div class="log-type-name">
+                    {{ logType.name }}
+                    <span v-if="logType.archived" class="archived-label"
+                      >Archived</span
+                    >
+                  </div>
                   <div class="log-type-meta">
                     <span class="frequency">{{
                       logType.frequencyDisplay
@@ -288,17 +325,24 @@ const getLogStatus = (logType: any) => {
   gap: 20px;
 }
 
+.controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 0 20px;
+  margin-bottom: 20px;
+}
+
 .fill-in-all-container {
   display: flex;
   justify-content: center;
-  padding: 0 20px;
 }
 
 .group-toggle-container {
   display: flex;
   justify-content: center;
-  padding: 0 20px;
-  margin-bottom: 10px;
 }
 
 .group-toggle {
@@ -316,6 +360,28 @@ const getLogStatus = (logType: any) => {
   font-size: 0.95em;
   font-weight: 500;
   color: #555;
+}
+
+.show-archived-container {
+  display: flex;
+  justify-content: center;
+}
+
+.show-archived-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  border: 1px solid #d0d0d0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.toggle-label-small {
+  font-size: 0.85em;
+  font-weight: 500;
+  color: #666;
 }
 
 .fill-in-all-btn {
@@ -464,6 +530,21 @@ const getLogStatus = (logType: any) => {
   font-weight: 500;
   color: #333;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.archived-label {
+  font-size: 0.75em;
+  font-weight: 600;
+  color: #ff9800;
+  background-color: #fff3e0;
+  padding: 2px 6px;
+  border-radius: 8px;
+  border: 1px solid #ffcc02;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .log-type-meta {
@@ -585,6 +666,13 @@ const getLogStatus = (logType: any) => {
 
 /* Responsive design */
 @media (max-width: 480px) {
+  .controls-row {
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 10px;
+    margin-bottom: 16px;
+  }
+
   .fill-in-all-btn {
     min-width: 180px;
     padding: 14px 28px;
@@ -592,11 +680,11 @@ const getLogStatus = (logType: any) => {
   }
 
   .fill-in-all-container {
-    padding: 0 10px;
+    padding: 0;
   }
 
   .group-toggle-container {
-    padding: 0 10px;
+    padding: 0;
   }
 
   .group-toggle {
@@ -606,6 +694,29 @@ const getLogStatus = (logType: any) => {
 
   .toggle-label {
     font-size: 0.9em;
+  }
+
+  .show-archived-container {
+    padding: 0;
+  }
+
+  .show-archived-toggle {
+    padding: 8px 16px;
+    gap: 8px;
+  }
+
+  .toggle-label-small {
+    font-size: 0.8em;
+  }
+
+  .log-type-name {
+    font-size: 1em;
+    gap: 6px;
+  }
+
+  .archived-label {
+    font-size: 0.7em;
+    padding: 1px 4px;
   }
 
   .category-header {
