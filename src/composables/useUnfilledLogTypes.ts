@@ -1,6 +1,41 @@
 import { computed } from "vue";
-import type { LogType, LogValue } from "@/types";
+import type { LogType } from "@/types";
 import { useLogsStore } from "@/stores/Logs";
+
+/**
+ * Utility function to check if a log type has been filled recently (based on frequency)
+ * Works with aggregated data (lastTime) instead of full LogValues array
+ * @param logType - The log type to check (must have aggrs.lastTime)
+ * @returns true if filled recently, false if needs filling
+ */
+export function isLogTypeFilledRecentlyUtil(logType: LogType): boolean {
+  // If no aggregates or no lastTime, it needs filling
+  if (!logType.aggrs?.lastTime) {
+    return false; // No logs at all, needs filling
+  }
+
+  const now = new Date();
+  const lastLogDate = new Date(logType.aggrs.lastTime);
+
+  // For frequency=1 (daily), check if last log was today (calendar day)
+  if (logType.frequency === 1) {
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // If last log was today, it's filled; otherwise needs filling
+    return lastLogDate >= today && lastLogDate < tomorrow;
+  }
+
+  // For other frequencies, use the sliding window approach
+  const daysSinceLastLog = Math.floor(
+    (now.getTime() - lastLogDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  // If days since last log exceed frequency, it needs filling
+  return daysSinceLastLog <= logType.frequency;
+}
 
 /**
  * Composable for getting unfilled log types
@@ -14,28 +49,8 @@ export function useUnfilledLogTypes(categoryName?: string) {
 
   // Helper function to check if a log type has been filled recently (based on frequency)
   const isLogTypeFilledRecently = (logType: LogType): boolean => {
-    const logValues = logsStore.getLogValues(logType.name).value;
-
-    if (!logValues || logValues.length === 0) {
-      return false; // No logs at all, needs filling
-    }
-
-    const now = new Date();
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
-
-    // Calculate the period based on frequency (frequency days back from today)
-    const periodStart = new Date(today);
-    periodStart.setDate(today.getDate() - (logType.frequency - 1));
-
-    // Check if there are any logs within the frequency period
-    const hasLogInPeriod = logValues.some((log: LogValue) => {
-      const logDate = new Date(log.timestamp);
-      logDate.setHours(0, 0, 0, 0); // Normalize to start of day
-      return logDate >= periodStart && logDate <= today;
-    });
-
-    return hasLogInPeriod;
+    // Use aggregated data (lastTime) instead of full log values array
+    return isLogTypeFilledRecentlyUtil(logType);
   };
 
   // Get all log types that haven't been filled recently (based on frequency, filtered by category if specified)

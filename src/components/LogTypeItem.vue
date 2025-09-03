@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { isLogTypeFilledRecentlyUtil } from "@/composables/useUnfilledLogTypes";
+import type { LogType } from "@/types";
+
 interface EnhancedLogType {
   name: string;
   type: string;
@@ -42,22 +45,29 @@ const toggleFavorite = () => {
   emit("toggleFavorite", props.logType.name);
 };
 
+// Convert EnhancedLogType to LogType for utility function compatibility
+const convertToLogType = (enhanced: EnhancedLogType): LogType => ({
+  name: enhanced.name,
+  type: enhanced.type as any,
+  desc: "",
+  frequency: enhanced.frequency,
+  oneToTen: false,
+  favorite: enhanced.favorite,
+  archived: enhanced.archived,
+  category: enhanced.categoryName,
+  aggrs: enhanced.aggrs || {},
+});
+
 const getLogStatus = (logType: EnhancedLogType) => {
-  if (!logType.aggrs?.lastTime) {
-    return "default"; // No logs yet
+  if (logType.archived) {
+    return "default"; // Don't show status for archived items
   }
 
-  const now = new Date();
-  const lastLogDate = new Date(logType.aggrs.lastTime);
-  const daysSinceLastLog = Math.floor(
-    (now.getTime() - lastLogDate.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  // Convert to LogType format and use the utility function
+  const logTypeObj = convertToLogType(logType);
+  const isFilled = isLogTypeFilledRecentlyUtil(logTypeObj);
 
-  if (daysSinceLastLog <= logType.frequency) {
-    return "green"; // Within frequency period
-  } else {
-    return "red"; // Overdue
-  }
+  return isFilled ? "green" : "red";
 };
 </script>
 

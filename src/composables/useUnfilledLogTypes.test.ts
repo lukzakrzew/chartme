@@ -89,6 +89,7 @@ describe("useUnfilledLogTypes", () => {
     });
 
     it("should not return filled log type with frequency 1 and today's log", () => {
+      const today = new Date();
       const logType: LogType = {
         name: "Daily Exercise",
         type: "boolean" as any,
@@ -102,25 +103,75 @@ describe("useUnfilledLogTypes", () => {
           monthAvg: 0,
           threeMonthAvg: 0,
           totalAvg: 0,
-          lastTime: undefined,
-          lastValue: undefined,
+          lastTime: today.toISOString(), // Today's log
+          lastValue: true,
         },
       };
 
-      const today = new Date();
-      const todaysLog: LogValue = {
-        value: true,
-        timestamp: today.toISOString(),
-        comment: "",
-      };
-
       mockLogsStore.logTypes = [logType];
-      mockLogsStore.getLogValues.mockReturnValue({
-        value: [todaysLog],
-      });
 
       const { unfilledLogTypes } = useUnfilledLogTypes();
       expect(unfilledLogTypes.value).toHaveLength(0);
+    });
+
+    it("should return unfilled log type with frequency 1 when last log was yesterday at 23:55", () => {
+      // Simulate logging yesterday at 23:55
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(23, 55, 0, 0); // Yesterday at 23:55
+
+      const logType: LogType = {
+        name: "Daily Exercise",
+        type: "boolean" as any,
+        desc: "Daily exercise",
+        frequency: 1,
+        oneToTen: false,
+        favorite: false,
+        archived: false,
+        aggrs: {
+          weekAvg: 0,
+          monthAvg: 0,
+          threeMonthAvg: 0,
+          totalAvg: 0,
+          lastTime: yesterday.toISOString(), // Yesterday 23:55
+          lastValue: true,
+        },
+      };
+
+      mockLogsStore.logTypes = [logType];
+
+      const { unfilledLogTypes } = useUnfilledLogTypes();
+      expect(unfilledLogTypes.value).toHaveLength(1); // Should need filling today
+      expect(unfilledLogTypes.value[0].name).toBe("Daily Exercise");
+    });
+
+    it("should not return filled log type with frequency 1 when logged today at 00:01", () => {
+      // Simulate logging today at 00:01 (just after midnight)
+      const todayEarly = new Date();
+      todayEarly.setHours(0, 1, 0, 0); // Today at 00:01
+
+      const logType: LogType = {
+        name: "Daily Exercise",
+        type: "boolean" as any,
+        desc: "Daily exercise",
+        frequency: 1,
+        oneToTen: false,
+        favorite: false,
+        archived: false,
+        aggrs: {
+          weekAvg: 0,
+          monthAvg: 0,
+          threeMonthAvg: 0,
+          totalAvg: 0,
+          lastTime: todayEarly.toISOString(), // Today at 00:01
+          lastValue: true,
+        },
+      };
+
+      mockLogsStore.logTypes = [logType];
+
+      const { unfilledLogTypes } = useUnfilledLogTypes();
+      expect(unfilledLogTypes.value).toHaveLength(0); // Should NOT need filling (already logged today)
     });
 
     it("should return unfilled log type with frequency 7 and no logs in 7 days", () => {
@@ -161,6 +212,9 @@ describe("useUnfilledLogTypes", () => {
     });
 
     it("should not return filled log type with frequency 7 and recent log within 7 days", () => {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
       const logType: LogType = {
         name: "Weekly Review",
         type: "boolean" as any,
@@ -174,24 +228,12 @@ describe("useUnfilledLogTypes", () => {
           monthAvg: 0,
           threeMonthAvg: 0,
           totalAvg: 0,
-          lastTime: undefined,
-          lastValue: undefined,
+          lastTime: threeDaysAgo.toISOString(), // Recent log (3 days ago)
+          lastValue: true,
         },
       };
 
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-
-      const recentLog: LogValue = {
-        value: true,
-        timestamp: threeDaysAgo.toISOString(),
-        comment: "",
-      };
-
       mockLogsStore.logTypes = [logType];
-      mockLogsStore.getLogValues.mockReturnValue({
-        value: [recentLog],
-      });
 
       const { unfilledLogTypes } = useUnfilledLogTypes();
       expect(unfilledLogTypes.value).toHaveLength(0);
@@ -389,6 +431,9 @@ describe("useUnfilledLogTypes", () => {
 
   describe("isLogTypeFilledRecently function", () => {
     it("should return true for log type with recent log within frequency period", () => {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
       const logType: LogType = {
         name: "Weekly Task",
         type: "boolean" as any,
@@ -402,29 +447,19 @@ describe("useUnfilledLogTypes", () => {
           monthAvg: 0,
           threeMonthAvg: 0,
           totalAvg: 0,
-          lastTime: undefined,
-          lastValue: undefined,
+          lastTime: threeDaysAgo.toISOString(), // Recent log (3 days ago)
+          lastValue: true,
         },
       };
-
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-
-      const recentLog: LogValue = {
-        value: true,
-        timestamp: threeDaysAgo.toISOString(),
-        comment: "",
-      };
-
-      mockLogsStore.getLogValues.mockReturnValue({
-        value: [recentLog],
-      });
 
       const { isLogTypeFilledRecently } = useUnfilledLogTypes();
       expect(isLogTypeFilledRecently(logType)).toBe(true);
     });
 
     it("should return false for log type with old log outside frequency period", () => {
+      const tenDaysAgo = new Date();
+      tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+
       const logType: LogType = {
         name: "Weekly Task",
         type: "boolean" as any,
@@ -438,23 +473,10 @@ describe("useUnfilledLogTypes", () => {
           monthAvg: 0,
           threeMonthAvg: 0,
           totalAvg: 0,
-          lastTime: undefined,
-          lastValue: undefined,
+          lastTime: tenDaysAgo.toISOString(), // Old log (10 days ago)
+          lastValue: true,
         },
       };
-
-      const tenDaysAgo = new Date();
-      tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
-
-      const oldLog: LogValue = {
-        value: true,
-        timestamp: tenDaysAgo.toISOString(),
-        comment: "",
-      };
-
-      mockLogsStore.getLogValues.mockReturnValue({
-        value: [oldLog],
-      });
 
       const { isLogTypeFilledRecently } = useUnfilledLogTypes();
       expect(isLogTypeFilledRecently(logType)).toBe(false);
@@ -474,14 +496,10 @@ describe("useUnfilledLogTypes", () => {
           monthAvg: 0,
           threeMonthAvg: 0,
           totalAvg: 0,
-          lastTime: undefined,
+          lastTime: undefined, // No logs
           lastValue: undefined,
         },
       };
-
-      mockLogsStore.getLogValues.mockReturnValue({
-        value: [], // No logs
-      });
 
       const { isLogTypeFilledRecently } = useUnfilledLogTypes();
       expect(isLogTypeFilledRecently(logType)).toBe(false);
