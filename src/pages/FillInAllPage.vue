@@ -1,37 +1,25 @@
 <script setup lang="ts">
-import { useLogsStore } from "@/stores/Logs";
 import { computed, ref } from "vue";
-import { useRouter } from "vue-router";
-import type { LogValue, LogType } from "@/types";
+import { useRouter, useRoute } from "vue-router";
+import { useLogsStore } from "@/stores/Logs";
+import type { LogValue } from "@/types";
 import AddLogForm from "@/components/AddLogForm.vue";
+import { useUnfilledLogTypes } from "@/composables/useUnfilledLogTypes";
 
 const logsStore = useLogsStore();
 const router = useRouter();
+const route = useRoute();
 const currentIndex = ref(0);
 
-// Get all log types that haven't been filled today
-const unfilledLogTypes = computed((): LogType[] => {
-  return logsStore.logTypes.filter((logType) => {
-    const logValues = logsStore.getLogValues(logType.name).value;
+// Get category name from query parameter
+const categoryName = computed(
+  () => route.query.categoryName as string | undefined
+);
 
-    if (!logValues || logValues.length === 0) {
-      return true; // No logs at all, needs filling
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const hasLogForToday = logValues.some((log: LogValue) => {
-      const logDate = new Date(log.timestamp);
-      return logDate >= today && logDate < tomorrow;
-    });
-
-    return !hasLogForToday; // Return true if no log for today (needs filling)
-  });
-});
+// Use composable for unfilled log types logic
+const { unfilledLogTypes, isLogTypeFilledRecently } = useUnfilledLogTypes(
+  categoryName.value
+);
 
 // Current log type being filled
 const currentLogType = computed(() => {
@@ -46,26 +34,10 @@ const progressPercentage = computed(() => {
   return Math.round((currentIndex.value / totalCount.value) * 100);
 });
 
-// Check if current log type has been filled today
+// Check if current log type has been filled recently (based on frequency)
 const hasLogForToday = computed((): boolean => {
   if (!currentLogType.value) return false;
-
-  const logValues = logsStore.getLogValues(currentLogType.value.name).value;
-
-  if (!logValues || logValues.length === 0) {
-    return false;
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  return logValues.some((log: LogValue) => {
-    const logDate = new Date(log.timestamp);
-    return logDate >= today && logDate < tomorrow;
-  });
+  return isLogTypeFilledRecently(currentLogType.value);
 });
 
 // Handle log submission
@@ -111,7 +83,8 @@ const isCompleted = computed(() => {
     <!-- Header with progress -->
     <div class="header">
       <div class="progress-info">
-        <h3>Fill in all logs</h3>
+        <h3 v-if="categoryName">Fill {{ categoryName }} logs</h3>
+        <h3 v-else>Fill in all logs</h3>
       </div>
     </div>
 
@@ -123,10 +96,20 @@ const isCompleted = computed(() => {
           <span class="completion-icon">🎉</span>
           <h2>All done!</h2>
           <p v-if="totalCount === 0">
-            All your log types are already filled for today.
+            <span v-if="categoryName"
+              >All {{ categoryName }} log types are already filled for
+              today.</span
+            >
+            <span v-else>All your log types are already filled for today.</span>
           </p>
           <p v-else>
-            You've successfully filled in all your log types for today.
+            <span v-if="categoryName"
+              >You've successfully filled in all {{ categoryName }} log types
+              for today.</span
+            >
+            <span v-else
+              >You've successfully filled in all your log types for today.</span
+            >
           </p>
           <button @click="router.push('/')" class="done-btn">
             Go back to home

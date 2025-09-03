@@ -3,21 +3,32 @@ import {
   createWebHistory,
   type RouteRecordRaw,
 } from "vue-router";
-import LogTypes from "@/pages/LogTypes.vue";
-import AddLogType from "@/pages/AddLogType.vue";
-import AddCategory from "@/pages/AddCategory.vue";
-import AddLog from "@/pages/AddLog.vue";
-import FillInAll from "@/pages/FillInAll.vue";
-import Chart from "@/pages/Chart.vue";
+import LogTypesPage from "@/pages/LogTypesPage.vue";
+import AddLogTypePage from "@/pages/AddLogTypePage.vue";
+import AddCategoryPage from "@/pages/AddCategoryPage.vue";
+import CategoriesListPage from "@/pages/CategoriesListPage.vue";
+import AddLogPage from "@/pages/AddLogPage.vue";
+import FillInAllPage from "@/pages/FillInAllPage.vue";
+import ChartPage from "@/pages/ChartPage.vue";
 
 const routes: RouteRecordRaw[] = [
-  { path: "/", component: LogTypes },
-  { path: "/add-log-type", component: AddLogType },
-  { path: "/edit-log-type/:logTypeName", component: AddLogType, props: true },
-  { path: "/add-category", component: AddCategory },
-  { path: "/log/:logTypeName", component: AddLog, props: true },
-  { path: "/chart/:logTypeName", component: Chart, props: true },
-  { path: "/fill-in-all", component: FillInAll },
+  { path: "/", component: LogTypesPage },
+  { path: "/add-log-type", component: AddLogTypePage },
+  {
+    path: "/edit-log-type/:logTypeName",
+    component: AddLogTypePage,
+    props: true,
+  },
+  { path: "/categories", component: CategoriesListPage },
+  { path: "/add-category", component: AddCategoryPage },
+  {
+    path: "/edit-category/:categoryName",
+    component: AddCategoryPage,
+    props: true,
+  },
+  { path: "/log/:logTypeName", component: AddLogPage, props: true },
+  { path: "/chart/:logTypeName", component: ChartPage, props: true },
+  { path: "/fill-in-all", component: FillInAllPage },
 ];
 
 const router = createRouter({
