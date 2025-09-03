@@ -8,6 +8,7 @@ import { logTypes as testLogTypes } from "@/testData/logTypes";
 import { categories as testCategories } from "@/testData/categories";
 import { logsPushups } from "@/testData/logs-pushups";
 import { logsPullups } from "@/testData/logs-pullups";
+import { logsDiet } from "@/testData/logs-diet";
 
 export const LocalStorageKeys = {
   logTypes: "logTypes",
@@ -223,17 +224,20 @@ export const useLogsStore = defineStore("logs", () => {
     store.set(LocalStorageKeys.categories, categories.value);
 
     // Load test log data
-    const testLogData = [logsPushups, logsPullups];
+    const testLogData = [logsPushups, logsPullups, logsDiet];
 
     testLogData.forEach((testLog) => {
-      // Store in localStorage
-      store.set(
-        `${LocalStorageKeys.logsPrefix}${testLog.name}`,
-        testLog.values
+      // Sort LogValues by timestamp (oldest first, newest last)
+      const sortedValues = [...testLog.values].sort(
+        (a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
 
-      // Update reactive refs
-      logValuesRefs.set(testLog.name, ref<LogValue[]>([...testLog.values]));
+      // Store sorted data in localStorage
+      store.set(`${LocalStorageKeys.logsPrefix}${testLog.name}`, sortedValues);
+
+      // Update reactive refs with sorted data
+      logValuesRefs.set(testLog.name, ref<LogValue[]>(sortedValues));
     });
 
     // Recalculate aggregates for all loaded log types
