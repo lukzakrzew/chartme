@@ -88,6 +88,15 @@
             icon="star"
           />
 
+          <div class="q-mt-md">
+            <q-toggle
+              v-model="form.archived"
+              label="Archive log type"
+              icon="archive"
+              color="red"
+            />
+          </div>
+
           <div class="row q-gutter-sm q-mt-md justify-center">
             <q-btn
               :label="isEditMode ? 'Update Log Type' : 'Save Log Type'"
@@ -138,6 +147,7 @@ const form = reactive({
   oneToTen: false,
   category: undefined as string | undefined,
   favorite: false,
+  archived: false,
 });
 const errorMessage = ref("");
 const frequencyOption = ref("daily");
@@ -154,6 +164,7 @@ onMounted(() => {
       form.oneToTen = existingLogType.oneToTen || false;
       form.category = existingLogType.category;
       form.favorite = existingLogType.favorite || false;
+      form.archived = existingLogType.archived || false;
 
       originalName.value = existingLogType.name;
 
@@ -231,8 +242,8 @@ function onSubmit() {
       oneToTen: form.oneToTen,
       category: form.category,
       favorite: form.favorite,
+      archived: form.archived,
       aggrs: {}, // Keep existing aggregates
-      archived: false, // Default to not archived
     };
 
     logsStore.updateLogType(originalName.value, updatedLogType);
@@ -246,8 +257,8 @@ function onSubmit() {
       oneToTen: form.oneToTen,
       category: form.category,
       favorite: form.favorite,
+      archived: form.archived,
       aggrs: {}, // Initialize empty aggregations
-      archived: false, // Default to not archived
     });
   }
 
@@ -262,6 +273,7 @@ function onReset() {
   form.oneToTen = false;
   form.category = undefined;
   form.favorite = false;
+  form.archived = false;
   frequencyOption.value = "daily";
   errorMessage.value = "";
 }
