@@ -9,27 +9,21 @@ const navigateToFillInAll = () => {
 </script>
 
 <template>
-  <div class="fill-in-all-container">
-    <button @click="navigateToFillInAll" class="fill-in-all-btn">
-      <span class="icon">✨</span>
-      <span class="text">Fill in all</span>
-    </button>
-  </div>
+  <button @click="navigateToFillInAll" class="fill-in-all-btn">
+    <span class="icon">✨</span>
+    <span class="text">Fill</span>
+  </button>
 </template>
 
 <style scoped>
-.fill-in-all-container {
-  display: flex;
-  justify-content: center;
-}
-
 .fill-in-all-btn {
+  width: 120px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 32px;
+  padding: 8px 20px;
   border: none;
-  border-radius: 16px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-size: 1.1em;
@@ -37,7 +31,6 @@ const navigateToFillInAll = () => {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-  min-width: 200px;
   justify-content: center;
 }
 
@@ -73,19 +66,6 @@ const navigateToFillInAll = () => {
   50% {
     transform: scale(1.1) rotate(180deg);
     opacity: 0.8;
-  }
-}
-
-/* Responsive design */
-@media (max-width: 480px) {
-  .fill-in-all-btn {
-    min-width: 180px;
-    padding: 14px 28px;
-    font-size: 1em;
-  }
-
-  .fill-in-all-container {
-    padding: 0;
   }
 }
 </style>

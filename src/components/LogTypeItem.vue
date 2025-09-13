@@ -103,7 +103,7 @@ const getLogStatus = (logType: EnhancedLogType) => {
             </span>
             <span v-else class="no-logs">No logs yet</span>
             <span v-if="logType.lastValue !== undefined" class="last-value">
-              Value: {{ logType.lastValue }}
+              {{ logType.lastValue }}
             </span>
           </div>
         </div>
@@ -127,7 +127,6 @@ const getLogStatus = (logType: EnhancedLogType) => {
           @click.stop="navigateToEditLogType"
         />
       </div>
-      <q-icon name="chevron_right" class="chevron-icon" />
     </div>
   </div>
 </template>
@@ -135,13 +134,13 @@ const getLogStatus = (logType: EnhancedLogType) => {
 <style scoped>
 .log-type {
   border: 1px solid #eee;
-  margin-bottom: 16px;
-  padding: 16px;
-  width: 100%;
+  padding: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
   border-radius: 8px;
   background-color: #fafafa;
+  margin-left: 0;
+  margin-right: 8px;
 }
 
 .log-type:hover {
@@ -153,8 +152,7 @@ const getLogStatus = (logType: EnhancedLogType) => {
 
 /* Status-based background colors */
 .log-type-green {
-  background-color: #e8f5e8;
-  border-color: #4caf50;
+  border-color: #4caf50 !important;
 }
 
 .log-type-green:hover {
@@ -163,8 +161,7 @@ const getLogStatus = (logType: EnhancedLogType) => {
 }
 
 .log-type-red {
-  background-color: #ffebee;
-  border-color: #f44336;
+  border-color: #e7c8c6 !important;
 }
 
 .log-type-red:hover {
@@ -217,7 +214,7 @@ const getLogStatus = (logType: EnhancedLogType) => {
 
 .log-type-name {
   font-size: 1.1em;
-  font-weight: 500;
+  font-weight: 700;
   color: #333;
   margin-bottom: 4px;
   display: flex;
@@ -282,13 +279,13 @@ const getLogStatus = (logType: EnhancedLogType) => {
 
 /* Grouped styles */
 .grouped-log-type {
-  margin-left: 16px;
+  margin-left: 0px;
   border-radius: 8px;
   border: 1px solid #f0f0f0;
 }
 
 .grouped-log-type .log-type-content {
-  padding: 12px 16px;
+  padding: 0px 16px;
 }
 
 .grouped-log-type .left-section {

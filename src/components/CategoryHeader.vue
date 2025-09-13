@@ -47,7 +47,7 @@ const navigateToFillCategory = () => {
         unfilledLogTypes.length === 1 ? '' : 's'
       } for today`"
     >
-      📝 Fill ({{ unfilledLogTypes.length }})
+      Fill ({{ unfilledLogTypes.length }})
     </button>
   </div>
 </template>
@@ -58,10 +58,6 @@ const navigateToFillCategory = () => {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 12px;
-  border: 1px solid #e1e5e9;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .category-header-icon {
@@ -78,7 +74,7 @@ const navigateToFillCategory = () => {
 
 .fill-category-btn {
   padding: 6px 12px;
-  border: 1px solid #007bff;
+  border: none;
   background: white;
   color: #007bff;
   border-radius: 6px;
@@ -87,12 +83,6 @@ const navigateToFillCategory = () => {
   font-size: 0.85em;
   font-weight: 500;
   white-space: nowrap;
-}
-
-.fill-category-btn:hover {
-  background: #007bff;
-  color: white;
-  transform: translateY(-1px);
 }
 
 /* Responsive design */

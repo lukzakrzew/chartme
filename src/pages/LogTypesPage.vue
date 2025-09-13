@@ -135,23 +135,22 @@ const toggleFavorite = (logTypeName: string) => {
   <div class="page-container">
     <!-- Controls row -->
     <div class="controls-row">
-      <!-- Group by categories toggle -->
-      <div class="group-toggle-container">
-        <div class="group-toggle">
-          <span class="toggle-label">Group by categories</span>
-          <q-toggle v-model="groupByCategories" color="primary" size="md" />
-        </div>
+      <div class="toggles">
+        <q-toggle
+          label="Group by categories"
+          v-model="groupByCategories"
+          color="primary"
+          size="md"
+        />
+
+        <q-toggle
+          label="View archived"
+          v-model="showArchived"
+          color="grey-7"
+          size="md"
+        />
       </div>
 
-      <!-- Show archived toggle -->
-      <div class="show-archived-container">
-        <div class="show-archived-toggle">
-          <span class="toggle-label-small">View archived</span>
-          <q-toggle v-model="showArchived" color="grey-7" size="sm" />
-        </div>
-      </div>
-
-      <!-- Fill in all button -->
       <FillInAllButton />
     </div>
 
@@ -204,56 +203,23 @@ const toggleFavorite = (logTypeName: string) => {
 
 .controls-row {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
-  padding: 0 20px;
+  /* padding: 0 20px; */
   margin-bottom: 20px;
 }
 
-.group-toggle-container {
+.toggles {
   display: flex;
+  flex-direction: column;
   justify-content: center;
 }
 
-.group-toggle {
+.log-type-list {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
-  padding: 12px 24px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.toggle-label {
-  font-size: 0.95em;
-  font-weight: 500;
-  color: #555;
-}
-
-.show-archived-container {
-  display: flex;
-  justify-content: center;
-}
-
-.show-archived-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  border: 1px solid #d0d0d0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.toggle-label-small {
-  font-size: 0.85em;
-  font-weight: 500;
-  color: #666;
 }
 
 /* Grouped view styles */
@@ -268,16 +234,17 @@ const toggleFavorite = (logTypeName: string) => {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  padding-bottom: 12px;
+  border-radius: 8px;
 }
 
 .category-items {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-left: 16px;
-  padding-left: 16px;
-  border-left: 2px solid #e1e5e9;
+  gap: 12px;
+  margin-left: 0px;
+  padding-left: 10px;
 }
 
 /* Responsive design */
@@ -316,12 +283,8 @@ const toggleFavorite = (logTypeName: string) => {
   }
 
   .category-items {
-    margin-left: 12px;
-    padding-left: 12px;
-  }
-
-  .grouped-log-type {
-    margin-left: 12px;
+    margin-left: 0px;
+    padding-left: 10px;
   }
 }
 </style>
