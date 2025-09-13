@@ -3,7 +3,8 @@ import { computed, ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useLogsStore } from "@/stores/Logs";
 import type { LogValue } from "@/types";
-import AddLogForm from "@/components/AddLogForm.vue";
+import FillInAllForm from "@/components/FillInAllForm.vue";
+import LogTypePills from "@/components/LogTypePills.vue";
 import { useUnfilledLogTypes } from "@/composables/useUnfilledLogTypes";
 
 const logsStore = useLogsStore();
@@ -34,12 +35,6 @@ const progressPercentage = computed(() => {
   return Math.round((currentIndex.value / totalCount.value) * 100);
 });
 
-// Check if current log type has been filled recently (based on frequency)
-const hasLogForToday = computed((): boolean => {
-  if (!currentLogType.value) return false;
-  return isLogTypeFilledRecently(currentLogType.value);
-});
-
 // Handle log submission
 const handleLogSubmit = (logValue: LogValue) => {
   if (currentLogType.value) {
@@ -53,8 +48,8 @@ const nextLogType = () => {
   if (currentIndex.value < unfilledLogTypes.value.length - 1) {
     currentIndex.value++;
   } else {
-    // All done, go back to home
-    router.push("/");
+    // Loop back to the beginning instead of going home
+    currentIndex.value = 0;
   }
 };
 
@@ -62,14 +57,24 @@ const skipLogType = () => {
   nextLogType();
 };
 
-// Check if we're done
+// Jump to a specific log type by name
+const jumpToLogTypeByName = (logTypeName: string) => {
+  const index = unfilledLogTypes.value.findIndex(
+    (lt) => lt.name === logTypeName
+  );
+  if (index !== -1) {
+    currentIndex.value = index;
+  }
+};
+
+// Check if we're done (no unfilled log types)
 const isCompleted = computed(() => {
-  return totalCount.value === 0 || currentIndex.value >= totalCount.value;
+  return totalCount.value === 0;
 });
 </script>
 
 <template>
-  <div class="fill-in-all-container">
+  <div>
     <!-- Progress bar -->
     <div v-if="!isCompleted" class="progress-bar-container">
       <div class="progress-bar">
@@ -118,39 +123,30 @@ const isCompleted = computed(() => {
       </div>
 
       <!-- Current log form -->
-      <div v-else-if="currentLogType" class="current-log">
-        <AddLogForm
-          :log-type="currentLogType"
-          :log-values="logsStore.getLogValues(currentLogType.name).value"
-          :has-log-for-today="hasLogForToday"
+      <div v-else-if="currentLogType">
+        <FillInAllForm
+          :current-log-type="currentLogType"
           @submit="handleLogSubmit"
+          @skip="skipLogType"
         />
 
-        <!-- Navigation controls -->
-        <div class="navigation-controls">
-          <button @click="skipLogType" class="nav-btn secondary">
-            Skip for now
-          </button>
-        </div>
+        <!-- Log types overview -->
+        <LogTypePills
+          :current-log-type="currentLogType"
+          :is-log-type-filled-recently="isLogTypeFilledRecently"
+          @jump-to="jumpToLogTypeByName"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.fill-in-all-container {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
 .header {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  border-bottom: 1px solid #eee;
+  padding: 10px;
   background: white;
   position: sticky;
   top: 0;
@@ -201,7 +197,6 @@ const isCompleted = computed(() => {
 
 .main-content {
   flex: 1;
-  padding: 20px;
   overflow-y: auto;
 }
 
@@ -258,51 +253,6 @@ const isCompleted = computed(() => {
   box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
 }
 
-.current-log {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.navigation-controls {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-.nav-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.9em;
-}
-
-.nav-btn:hover:not(:disabled) {
-  background: #f5f5f5;
-  border-color: #ccc;
-}
-
-.nav-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.nav-btn.secondary {
-  color: #666;
-}
-
-.icon {
-  font-size: 0.9em;
-}
-
 /* Responsive design */
 @media (max-width: 480px) {
   .header {
@@ -311,10 +261,6 @@ const isCompleted = computed(() => {
 
   .progress-info h3 {
     font-size: 1.1em;
-  }
-
-  .nav-btn {
-    justify-content: center;
   }
 
   .completion-content {

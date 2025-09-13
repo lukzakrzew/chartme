@@ -197,7 +197,10 @@ export const useLogsStore = defineStore("logs", () => {
       );
     });
 
-    console.log(`Shifted all logs by ${days} days`);
+    // Recalculate aggregates for all log types after shifting
+    recalculateAllAggregates();
+
+    console.log(`Shifted all logs by ${days} days and recalculated aggregates`);
   }
 
   function debugShiftLogsOneDayEarlier() {
