@@ -93,6 +93,7 @@ import { reactive, ref, defineEmits, defineExpose } from "vue";
 import { useLogsStore } from "@/stores/Logs";
 import IconPicker from "@/components/IconPicker.vue";
 import type { Category } from "@/types";
+import { storeToRefs } from "pinia";
 
 const emit = defineEmits<{
   cancel: [];
@@ -100,6 +101,7 @@ const emit = defineEmits<{
 }>();
 
 const logsStore = useLogsStore();
+const { categories } = storeToRefs(logsStore);
 
 const form = reactive({
   name: "",
@@ -157,7 +159,7 @@ function onSubmit() {
   }
 
   // Check for duplicate icon+color combinations (exclude current category when editing)
-  const duplicateIconColor = logsStore.categories.find(
+  const duplicateIconColor = categories.value.find(
     (c) =>
       c.icon === form.icon &&
       c.color === form.color &&

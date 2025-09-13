@@ -248,8 +248,8 @@ const chartOptions = computed(() => {
               },
             }
           : undefined,
-        max: isBoolean ? 1 : logType?.max || undefined,
-        min: isBoolean ? 0 : logType?.min || undefined,
+        max: isBoolean ? 1 : logType?.oneToTen ? 10 : undefined,
+        min: isBoolean ? 0 : logType?.oneToTen ? 1 : undefined,
       },
     },
     interaction: {
