@@ -4,7 +4,7 @@ import { quasar } from "@quasar/vite-plugin";
 import path from "path";
 
 export default defineConfig({
-  base: "/chartme/",
+  base: "./",
   build: {
     outDir: "docs",
   },
