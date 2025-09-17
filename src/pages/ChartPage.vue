@@ -4,32 +4,7 @@ import { useRoute } from "vue-router";
 import { computed, ref } from "vue";
 import type { LogValue } from "@/types";
 import LogHistory from "@/components/LogHistory.vue";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  TimeScale,
-} from "chart.js";
 import { Chart } from "vue-chartjs";
-
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  TimeScale
-);
 
 const route = useRoute();
 const logsStore = useLogsStore();

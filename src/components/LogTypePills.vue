@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import type { LogType } from "@/types";
-import { useLogsStore } from "@/stores/Logs";
 
 interface Props {
   currentLogType: LogType | null;
   isLogTypeFilledRecently: (logType: LogType) => boolean;
+  logTypes: LogType[];
+  categoryName?: string;
 }
 
 const props = defineProps<Props>();
@@ -13,13 +13,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   jumpTo: [logTypeName: string];
 }>();
-
-const logsStore = useLogsStore();
-
-// Get all non-archived log types
-const allLogTypes = computed(() =>
-  logsStore.logTypes.filter((lt) => !lt.archived)
-);
 
 // Determine pill class for each log type
 const getPillClass = (logType: LogType) => {
@@ -37,13 +30,16 @@ const handleJumpTo = (logTypeName: string) => {
 </script>
 
 <template>
-  <div v-if="allLogTypes.length > 0" class="log-types-section">
+  <div v-if="logTypes.length > 0" class="log-types-section">
     <div class="section-header">
-      <span>{{ allLogTypes.length }} log types</span>
+      <span v-if="props.categoryName"
+        >{{ logTypes.length }} log types in {{ props.categoryName }}</span
+      >
+      <span v-else>{{ logTypes.length }} log types</span>
     </div>
     <div class="pills-container">
       <button
-        v-for="logType in allLogTypes"
+        v-for="logType in logTypes"
         :key="logType.name"
         class="pill-button"
         :class="getPillClass(logType)"

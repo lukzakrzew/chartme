@@ -8,6 +8,9 @@ import "./style.css";
 import App from "./App.vue";
 import router from "./router";
 import { useLogsStore } from "./stores/Logs";
+import { Chart as ChartJS, registerables } from "chart.js";
+
+ChartJS.register(...registerables);
 
 const app = createApp(App);
 const pinia = createPinia();

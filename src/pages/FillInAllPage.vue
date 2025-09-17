@@ -125,6 +125,7 @@ const isCompleted = computed(() => {
       <!-- Current log form -->
       <div v-else-if="currentLogType">
         <FillInAllForm
+          :key="currentLogType.name"
           :current-log-type="currentLogType"
           @submit="handleLogSubmit"
           @skip="skipLogType"
@@ -135,6 +136,8 @@ const isCompleted = computed(() => {
           :current-log-type="currentLogType"
           :is-log-type-filled-recently="isLogTypeFilledRecently"
           @jump-to="jumpToLogTypeByName"
+          :log-types="unfilledLogTypes"
+          :category-name="categoryName"
         />
       </div>
     </div>
