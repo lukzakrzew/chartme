@@ -11,6 +11,10 @@ const { logValues } = defineProps<Props>();
 const router = useRouter();
 const route = useRoute();
 
+const emit = defineEmits<{
+  dateClick: [date: Date];
+}>();
+
 // Track which comments are expanded in the log history
 const expandedComments = ref(new Set<string>());
 
@@ -30,6 +34,11 @@ const goToChart = () => {
 // Check if we're currently on the chart page
 const isOnChartPage = () => {
   return route.path.startsWith("/chart/");
+};
+
+const handleDateClick = (timestamp: string) => {
+  const date = new Date(timestamp);
+  emit("dateClick", date);
 };
 </script>
 
@@ -67,9 +76,11 @@ const isOnChartPage = () => {
             }}
           </span>
           <div class="right-section">
-            <span class="timestamp">{{
-              new Date(logValue.timestamp).toLocaleString()
-            }}</span>
+            <span
+              class="timestamp clickable"
+              @click="handleDateClick(logValue.timestamp)"
+              >{{ new Date(logValue.timestamp).toLocaleString() }}</span
+            >
             <span
               class="comment-icon"
               :class="{ visible: logValue.comment }"
@@ -167,6 +178,16 @@ const isOnChartPage = () => {
 .timestamp {
   font-size: 0.9em;
   color: #666;
+}
+
+.timestamp.clickable {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.timestamp.clickable:hover {
+  color: #007bff;
+  text-decoration: underline;
 }
 
 .comment-icon {

@@ -2,6 +2,7 @@ import type { LogType, LogValue, Category } from "@/types";
 import store from "store2";
 import { defineStore } from "pinia";
 import { ref, type Ref } from "vue";
+import { isDate, isToday } from "@/helpers/dateUtils";
 
 // Import test data
 import { logTypes as testLogTypes } from "@/testData/logTypes";
@@ -92,15 +93,9 @@ export const useLogsStore = defineStore("logs", () => {
   function updateTodayLogValue(name: string, newValue: LogValue) {
     const logValuesRef = getLogValues(name);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const indexToday = logValuesRef.value.findIndex((lv) => {
-      const d = new Date(lv.timestamp);
-      return d >= today && d < tomorrow;
-    });
+    const indexToday = logValuesRef.value.findIndex((lv) =>
+      isToday(lv.timestamp)
+    );
 
     if (indexToday !== -1) {
       logValuesRef.value.splice(indexToday, 1, newValue);
@@ -118,15 +113,9 @@ export const useLogsStore = defineStore("logs", () => {
   ) {
     const logValuesRef = getLogValues(name);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const indexToday = logValuesRef.value.findIndex((lv) => {
-      const d = new Date(lv.timestamp);
-      return d >= today && d < tomorrow;
-    });
+    const indexToday = logValuesRef.value.findIndex((lv) =>
+      isToday(lv.timestamp)
+    );
 
     if (indexToday === -1) return;
 
@@ -140,6 +129,54 @@ export const useLogsStore = defineStore("logs", () => {
     };
 
     logValuesRef.value.splice(indexToday, 1, updated);
+    store.set(`${LocalStorageKeys.logsPrefix}${name}`, logValuesRef.value);
+    recalculateAggregates(name);
+  }
+
+  // Replace log value for a specific date with a new value
+  function updateLogValueByDate(
+    name: string,
+    targetDate: Date,
+    newValue: LogValue
+  ) {
+    const logValuesRef = getLogValues(name);
+
+    const index = logValuesRef.value.findIndex((lv) =>
+      isDate(lv.timestamp, targetDate)
+    );
+
+    if (index !== -1) {
+      logValuesRef.value.splice(index, 1, newValue);
+      store.set(`${LocalStorageKeys.logsPrefix}${name}`, logValuesRef.value);
+      recalculateAggregates(name);
+    }
+  }
+
+  // Increment numeric value for a specific date by delta; if not numeric or not found, no-op
+  function incrementNumberValueByDate(
+    name: string,
+    targetDate: Date,
+    delta: number,
+    comment: string = ""
+  ) {
+    const logValuesRef = getLogValues(name);
+
+    const index = logValuesRef.value.findIndex((lv) =>
+      isDate(lv.timestamp, targetDate)
+    );
+
+    if (index === -1) return;
+
+    const existing = logValuesRef.value[index];
+    if (typeof existing.value !== "number") return;
+
+    const updated: LogValue = {
+      value: (existing.value as number) + delta,
+      timestamp: new Date().toISOString(),
+      comment: comment || existing.comment || "",
+    };
+
+    logValuesRef.value.splice(index, 1, updated);
     store.set(`${LocalStorageKeys.logsPrefix}${name}`, logValuesRef.value);
     recalculateAggregates(name);
   }
@@ -358,6 +395,8 @@ export const useLogsStore = defineStore("logs", () => {
     addLogValue,
     updateTodayLogValue,
     incrementTodayNumberValue,
+    updateLogValueByDate,
+    incrementNumberValueByDate,
     recalculateAggregates,
     recalculateAllAggregates,
     // Debug methods

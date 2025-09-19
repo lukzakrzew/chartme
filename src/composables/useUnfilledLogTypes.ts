@@ -1,6 +1,7 @@
 import { computed } from "vue";
 import type { LogType } from "@/types";
 import { useLogsStore } from "@/stores/Logs";
+import { isToday } from "@/helpers/dateUtils";
 
 export function isLogTypeFilledRecently(logType: LogType): boolean {
   // If no aggregates or no lastTime, it needs filling
@@ -13,13 +14,8 @@ export function isLogTypeFilledRecently(logType: LogType): boolean {
 
   // For frequency=1 (daily), check if last log was today (calendar day)
   if (logType.frequency === 1) {
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
     // If last log was today, it's filled; otherwise needs filling
-    return lastLogDate >= today && lastLogDate < tomorrow;
+    return isToday(logType.aggrs.lastTime);
   }
 
   // For other frequencies, use the sliding window approach

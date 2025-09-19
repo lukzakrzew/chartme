@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useLogsStore } from "@/stores/Logs";
 import { useRoute } from "vue-router";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import type { LogValue } from "@/types";
+import { isToday } from "@/helpers/dateUtils";
 import LogHistory from "@/components/LogHistory.vue";
 import AddLogForm from "@/components/AddLogForm.vue";
 
@@ -19,16 +20,7 @@ const hasLogForToday = computed((): boolean => {
     return false;
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Start of today
-
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1); // Start of tomorrow
-
-  return logValues.value.some((log: LogValue) => {
-    const logDate = new Date(log.timestamp);
-    return logDate >= today && logDate < tomorrow;
-  });
+  return logValues.value.some((log: LogValue) => isToday(log.timestamp));
 });
 
 // Handle log submission from AddLogForm component
@@ -43,6 +35,21 @@ const handleUpdateToday = (logValue: LogValue) => {
 const handleIncrementToday = (delta: number, comment: string) => {
   logsStore.incrementTodayNumberValue(logTypeName, delta, comment);
 };
+
+const handleUpdateDate = (date: Date, logValue: LogValue) => {
+  logsStore.updateLogValueByDate(logTypeName, date, logValue);
+};
+
+const handleIncrementDate = (date: Date, delta: number, comment: string) => {
+  logsStore.incrementNumberValueByDate(logTypeName, date, delta, comment);
+};
+
+// Handle date click from LogHistory component
+const selectedDate = ref<Date | null>(null);
+
+const handleDateClick = (date: Date) => {
+  selectedDate.value = date;
+};
 </script>
 
 <template>
@@ -53,13 +60,16 @@ const handleIncrementToday = (delta: number, comment: string) => {
         :log-type="logType"
         :log-values="logValues"
         :has-log-for-today="hasLogForToday"
+        :selected-date="selectedDate || undefined"
         @submit="handleLogSubmit"
         @update-today="handleUpdateToday"
         @increment-today="handleIncrementToday"
+        @update-date="handleUpdateDate"
+        @increment-date="handleIncrementDate"
       />
     </div>
 
-    <LogHistory :log-values="logValues" />
+    <LogHistory :log-values="logValues" @date-click="handleDateClick" />
   </div>
 </template>
 

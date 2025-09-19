@@ -2,19 +2,39 @@
 import { computed, ref } from "vue";
 import type { LogValue, LogType } from "@/types";
 import { LOG_TYPES } from "@/constants";
+import { isDate } from "@/helpers/dateUtils";
 
 interface Props {
   logType: LogType;
   logValues: LogValue[];
   hasLogForToday: boolean;
+  selectedDate?: Date;
 }
 
 const props = defineProps<Props>();
+
+// Determine the target date for logging (selected date or today)
+const targetDate = computed((): Date => {
+  return props.selectedDate || new Date();
+});
+
+// Check if there's already a log for the target date
+const hasLogForTargetDate = computed((): boolean => {
+  if (!props.logValues || props.logValues.length === 0) {
+    return false;
+  }
+
+  return props.logValues.some((log: LogValue) =>
+    isDate(log.timestamp, targetDate.value)
+  );
+});
 
 const emit = defineEmits<{
   submit: [logValue: LogValue];
   updateToday: [logValue: LogValue];
   incrementToday: [delta: number, comment: string];
+  updateDate: [date: Date, logValue: LogValue];
+  incrementDate: [date: Date, delta: number, comment: string];
 }>();
 
 // Reactive computed for number buttons based on oneToTen setting and last logged value
@@ -78,7 +98,7 @@ const toggleComment = () => {
 const createLogValue = (value: boolean | number): LogValue => {
   return {
     value,
-    timestamp: new Date().toISOString(),
+    timestamp: targetDate.value.toISOString(),
     comment: showCommentInput.value ? commentText.value : "",
   };
 };
@@ -94,7 +114,11 @@ const clearAfterSubmit = () => {
 const clickYes = () => {
   const logValue = createLogValue(true);
   if (isEditing.value) {
-    emit("updateToday", logValue);
+    if (props.selectedDate) {
+      emit("updateDate", props.selectedDate, logValue);
+    } else {
+      emit("updateToday", logValue);
+    }
   } else {
     emit("submit", logValue);
   }
@@ -104,7 +128,11 @@ const clickYes = () => {
 const clickNo = () => {
   const logValue = createLogValue(false);
   if (isEditing.value) {
-    emit("updateToday", logValue);
+    if (props.selectedDate) {
+      emit("updateDate", props.selectedDate, logValue);
+    } else {
+      emit("updateToday", logValue);
+    }
   } else {
     emit("submit", logValue);
   }
@@ -115,15 +143,28 @@ const clickNo = () => {
 const submitNumber = () => {
   if (numberInput.value !== null && numberInput.value !== undefined) {
     if (isAdding.value) {
-      emit(
-        "incrementToday",
-        Number(numberInput.value),
-        showCommentInput.value ? commentText.value : ""
-      );
+      if (props.selectedDate) {
+        emit(
+          "incrementDate",
+          props.selectedDate,
+          Number(numberInput.value),
+          showCommentInput.value ? commentText.value : ""
+        );
+      } else {
+        emit(
+          "incrementToday",
+          Number(numberInput.value),
+          showCommentInput.value ? commentText.value : ""
+        );
+      }
     } else {
       const logValue = createLogValue(Number(numberInput.value));
       if (isEditing.value) {
-        emit("updateToday", logValue);
+        if (props.selectedDate) {
+          emit("updateDate", props.selectedDate, logValue);
+        } else {
+          emit("updateToday", logValue);
+        }
       } else {
         emit("submit", logValue);
       }
@@ -135,15 +176,28 @@ const submitNumber = () => {
 
 const clickNumberButton = (value: number) => {
   if (isAdding.value) {
-    emit(
-      "incrementToday",
-      value,
-      showCommentInput.value ? commentText.value : ""
-    );
+    if (props.selectedDate) {
+      emit(
+        "incrementDate",
+        props.selectedDate,
+        value,
+        showCommentInput.value ? commentText.value : ""
+      );
+    } else {
+      emit(
+        "incrementToday",
+        value,
+        showCommentInput.value ? commentText.value : ""
+      );
+    }
   } else {
     const logValue = createLogValue(value);
     if (isEditing.value) {
-      emit("updateToday", logValue);
+      if (props.selectedDate) {
+        emit("updateDate", props.selectedDate, logValue);
+      } else {
+        emit("updateToday", logValue);
+      }
     } else {
       emit("submit", logValue);
     }
@@ -156,13 +210,17 @@ const clickNumberButton = (value: number) => {
   <div>
     <h4>{{ logType.name }}</h4>
 
-    <!-- Show message when log for today already exists -->
+    <!-- Show message when log for target date already exists -->
     <div
-      v-if="hasLogForToday && !isEditing && !isAdding"
-      class="today-log-exists-message"
+      v-if="hasLogForTargetDate && !isEditing && !isAdding"
+      class="target-date-log-exists-message"
     >
       <div class="message-content">
-        <p>You've already logged a value for today!</p>
+        <p v-if="!selectedDate">You've already logged a value for today!</p>
+        <p v-else>
+          You've already logged a value for
+          {{ selectedDate.toLocaleDateString() }}!
+        </p>
 
         <div class="today-actions">
           <q-btn
@@ -192,8 +250,8 @@ const clickNumberButton = (value: number) => {
       </div>
     </div>
 
-    <!-- Input controls: show normally if no log today; if today exists, show when editing or adding -->
-    <div v-if="!hasLogForToday || isEditing || isAdding" class="log-value">
+    <!-- Input controls: show normally if no log for target date; if target date exists, show when editing or adding -->
+    <div v-if="!hasLogForTargetDate || isEditing || isAdding" class="log-value">
       <!-- Boolean type: YES/NO buttons -->
       <div v-if="logType.type === LOG_TYPES.boolean" class="log-type-boolean">
         <button @click="clickYes">YES</button>
@@ -231,7 +289,7 @@ const clickNumberButton = (value: number) => {
 
     <!-- Conditional comment textarea -->
     <div
-      v-if="showCommentInput && (!hasLogForToday || isEditing || isAdding)"
+      v-if="showCommentInput && (!hasLogForTargetDate || isEditing || isAdding)"
       class="comment-input"
     >
       <textarea
@@ -243,7 +301,10 @@ const clickNumberButton = (value: number) => {
     </div>
 
     <!-- Comment toggle button at bottom -->
-    <div v-if="!hasLogForToday || isEditing || isAdding" class="comment-toggle">
+    <div
+      v-if="!hasLogForTargetDate || isEditing || isAdding"
+      class="comment-toggle"
+    >
       <button @click="toggleComment" class="toggle-comment-btn">
         {{ showCommentInput ? "❌" : "💬" }}
       </button>
@@ -405,7 +466,8 @@ h4 {
   transform: translateY(0);
 }
 
-/* Today log exists message styling */
+/* Target date log exists message styling */
+.target-date-log-exists-message,
 .today-log-exists-message {
   display: flex;
   justify-content: center;
