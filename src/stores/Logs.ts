@@ -88,6 +88,62 @@ export const useLogsStore = defineStore("logs", () => {
     recalculateAggregates(name);
   }
 
+  // Replace today's log value (by timestamp range) with a new value
+  function updateTodayLogValue(name: string, newValue: LogValue) {
+    const logValuesRef = getLogValues(name);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const indexToday = logValuesRef.value.findIndex((lv) => {
+      const d = new Date(lv.timestamp);
+      return d >= today && d < tomorrow;
+    });
+
+    if (indexToday !== -1) {
+      logValuesRef.value.splice(indexToday, 1, newValue);
+    }
+
+    store.set(`${LocalStorageKeys.logsPrefix}${name}`, logValuesRef.value);
+    recalculateAggregates(name);
+  }
+
+  // Increment today's numeric value by delta; if not numeric or not found, no-op
+  function incrementTodayNumberValue(
+    name: string,
+    delta: number,
+    comment: string = ""
+  ) {
+    const logValuesRef = getLogValues(name);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const indexToday = logValuesRef.value.findIndex((lv) => {
+      const d = new Date(lv.timestamp);
+      return d >= today && d < tomorrow;
+    });
+
+    if (indexToday === -1) return;
+
+    const existing = logValuesRef.value[indexToday];
+    if (typeof existing.value !== "number") return;
+
+    const updated: LogValue = {
+      value: (existing.value as number) + delta,
+      timestamp: new Date().toISOString(),
+      comment: comment || existing.comment || "",
+    };
+
+    logValuesRef.value.splice(indexToday, 1, updated);
+    store.set(`${LocalStorageKeys.logsPrefix}${name}`, logValuesRef.value);
+    recalculateAggregates(name);
+  }
+
   // Calculate aggregates for a specific log type
   function recalculateAggregates(logTypeName: string) {
     const logTypeIndex = logTypes.value.findIndex(
@@ -300,6 +356,8 @@ export const useLogsStore = defineStore("logs", () => {
     updateCategory,
     getLogValues,
     addLogValue,
+    updateTodayLogValue,
+    incrementTodayNumberValue,
     recalculateAggregates,
     recalculateAllAggregates,
     // Debug methods

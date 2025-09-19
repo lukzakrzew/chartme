@@ -13,6 +13,8 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   submit: [logValue: LogValue];
+  updateToday: [logValue: LogValue];
+  incrementToday: [delta: number, comment: string];
 }>();
 
 // Reactive computed for number buttons based on oneToTen setting and last logged value
@@ -55,6 +57,10 @@ const computedNumberButtons = computed((): number[] => {
   return uniqueButtons;
 });
 
+// UI state
+const isEditing = ref(false);
+const isAdding = ref(false);
+
 // Comment functionality
 const showCommentInput = ref(false);
 const commentText = ref("");
@@ -81,33 +87,67 @@ const clearAfterSubmit = () => {
   if (showCommentInput.value) {
     commentText.value = ""; // Clear after adding
   }
+  isEditing.value = false;
+  isAdding.value = false;
 };
 
 const clickYes = () => {
   const logValue = createLogValue(true);
-  emit("submit", logValue);
+  if (isEditing.value) {
+    emit("updateToday", logValue);
+  } else {
+    emit("submit", logValue);
+  }
   clearAfterSubmit();
 };
 
 const clickNo = () => {
   const logValue = createLogValue(false);
-  emit("submit", logValue);
+  if (isEditing.value) {
+    emit("updateToday", logValue);
+  } else {
+    emit("submit", logValue);
+  }
   clearAfterSubmit();
 };
 
 // Number input handlers
 const submitNumber = () => {
   if (numberInput.value !== null && numberInput.value !== undefined) {
-    const logValue = createLogValue(numberInput.value);
-    emit("submit", logValue);
+    if (isAdding.value) {
+      emit(
+        "incrementToday",
+        Number(numberInput.value),
+        showCommentInput.value ? commentText.value : ""
+      );
+    } else {
+      const logValue = createLogValue(Number(numberInput.value));
+      if (isEditing.value) {
+        emit("updateToday", logValue);
+      } else {
+        emit("submit", logValue);
+      }
+    }
     numberInput.value = null; // Clear input
     clearAfterSubmit();
   }
 };
 
 const clickNumberButton = (value: number) => {
-  const logValue = createLogValue(value);
-  emit("submit", logValue);
+  if (isAdding.value) {
+    emit(
+      "incrementToday",
+      value,
+      showCommentInput.value ? commentText.value : ""
+    );
+  } else {
+    const logValue = createLogValue(value);
+    if (isEditing.value) {
+      emit("updateToday", logValue);
+    } else {
+      emit("submit", logValue);
+    }
+  }
   clearAfterSubmit();
 };
 </script>
@@ -117,16 +157,43 @@ const clickNumberButton = (value: number) => {
     <h4>{{ logType.name }}</h4>
 
     <!-- Show message when log for today already exists -->
-    <div v-if="hasLogForToday" class="today-log-exists-message">
+    <div
+      v-if="hasLogForToday && !isEditing && !isAdding"
+      class="today-log-exists-message"
+    >
       <div class="message-content">
-        <span class="check-icon">✅</span>
         <p>You've already logged a value for today!</p>
-        <p class="sub-message">Check your log history below.</p>
+
+        <div class="today-actions">
+          <q-btn
+            icon="edit"
+            round
+            flat
+            size="md"
+            aria-label="Edit today"
+            @click="
+              isEditing = !isEditing;
+              isAdding = false;
+            "
+          />
+          <q-btn
+            v-if="logType.type === LOG_TYPES.number"
+            icon="add"
+            round
+            flat
+            size="md"
+            aria-label="Add to today"
+            @click="
+              isAdding = !isAdding;
+              isEditing = false;
+            "
+          />
+        </div>
       </div>
     </div>
 
-    <!-- Show input controls only when no log for today exists -->
-    <div v-else class="log-value">
+    <!-- Input controls: show normally if no log today; if today exists, show when editing or adding -->
+    <div v-if="!hasLogForToday || isEditing || isAdding" class="log-value">
       <!-- Boolean type: YES/NO buttons -->
       <div v-if="logType.type === LOG_TYPES.boolean" class="log-type-boolean">
         <button @click="clickYes">YES</button>
@@ -163,7 +230,10 @@ const clickNumberButton = (value: number) => {
     </div>
 
     <!-- Conditional comment textarea -->
-    <div v-if="showCommentInput && !hasLogForToday" class="comment-input">
+    <div
+      v-if="showCommentInput && (!hasLogForToday || isEditing || isAdding)"
+      class="comment-input"
+    >
       <textarea
         v-model="commentText"
         placeholder="Add a comment for this log entry..."
@@ -172,8 +242,8 @@ const clickNumberButton = (value: number) => {
       ></textarea>
     </div>
 
-    <!-- Comment toggle button at bottom - only show when no log for today -->
-    <div v-if="!hasLogForToday" class="comment-toggle">
+    <!-- Comment toggle button at bottom -->
+    <div v-if="!hasLogForToday || isEditing || isAdding" class="comment-toggle">
       <button @click="toggleComment" class="toggle-comment-btn">
         {{ showCommentInput ? "❌" : "💬" }}
       </button>
@@ -347,17 +417,10 @@ h4 {
 .message-content {
   text-align: center;
   background-color: #f8f9fa;
-  border: 2px solid #28a745;
   border-radius: 12px;
   padding: 30px;
   max-width: 400px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.check-icon {
-  font-size: 3em;
-  display: block;
-  margin-bottom: 15px;
 }
 
 .message-content p {
@@ -365,13 +428,6 @@ h4 {
   font-size: 1.2em;
   color: #28a745;
   font-weight: 600;
-}
-
-.sub-message {
-  font-size: 1em !important;
-  color: #6c757d !important;
-  font-weight: 400 !important;
-  margin-top: 10px !important;
 }
 
 /* Responsive adjustments for smaller screens */
@@ -394,12 +450,26 @@ h4 {
     max-width: 300px;
   }
 
-  .check-icon {
-    font-size: 2.5em;
-  }
-
   .message-content p {
     font-size: 1.1em;
   }
+}
+
+/* Today actions styling (Edit/Add buttons) */
+.today-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.today-actions :deep(.q-btn) {
+  opacity: 0.8;
+  transition: all 0.2s ease;
+}
+
+.today-actions :deep(.q-btn):hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 </style>

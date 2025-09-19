@@ -113,7 +113,7 @@ const toggleFavorite = (logTypeName: string) => {
 .controls-row {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
+  gap: 10px;
   flex-wrap: wrap;
   /* padding: 0 20px; */
   margin-bottom: 20px;
@@ -158,13 +158,6 @@ const toggleFavorite = (logTypeName: string) => {
 
 /* Responsive design */
 @media (max-width: 480px) {
-  .controls-row {
-    flex-direction: column;
-    gap: 12px;
-    padding: 0 10px;
-    margin-bottom: 16px;
-  }
-
   .group-toggle-container {
     padding: 0;
   }

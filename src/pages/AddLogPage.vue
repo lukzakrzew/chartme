@@ -35,6 +35,14 @@ const hasLogForToday = computed((): boolean => {
 const handleLogSubmit = (logValue: LogValue) => {
   logsStore.addLogValue(logTypeName, logValue);
 };
+
+const handleUpdateToday = (logValue: LogValue) => {
+  logsStore.updateTodayLogValue(logTypeName, logValue);
+};
+
+const handleIncrementToday = (delta: number, comment: string) => {
+  logsStore.incrementTodayNumberValue(logTypeName, delta, comment);
+};
 </script>
 
 <template>
@@ -46,6 +54,8 @@ const handleLogSubmit = (logValue: LogValue) => {
         :log-values="logValues"
         :has-log-for-today="hasLogForToday"
         @submit="handleLogSubmit"
+        @update-today="handleUpdateToday"
+        @increment-today="handleIncrementToday"
       />
     </div>
 
