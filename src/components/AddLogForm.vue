@@ -139,6 +139,7 @@ const handleAdd = () => {
       :selected-date="selectedDate"
       :log-type-name="logType.name"
       :is-number-type="logType.type === LOG_TYPES.number"
+      :log-values="logValues"
       @edit="handleEdit"
       @add="handleAdd"
     />

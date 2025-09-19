@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { LOG_TYPES } from "@/constants";
+import type { LogValue } from "@/types";
+import ValueDisplay from "@/components/ValueDisplay.vue";
+import { isDate } from "@/helpers/dateUtils";
+import { computed } from "vue";
 
 interface Props {
   selectedDate?: Date;
   logTypeName: string;
   isNumberType: boolean;
+  logValues: LogValue[];
 }
 
 const props = defineProps<Props>();
@@ -13,6 +17,15 @@ const emit = defineEmits<{
   edit: [];
   add: [];
 }>();
+
+// Find the value for the target date
+const targetDateValue = computed((): any => {
+  const targetDate = props.selectedDate || new Date();
+  const logForDate = props.logValues.find((log: LogValue) =>
+    isDate(log.timestamp, targetDate)
+  );
+  return logForDate ? logForDate.value : null;
+});
 
 const handleEdit = () => {
   emit("edit");
@@ -31,6 +44,11 @@ const handleAdd = () => {
         You've already logged a value for
         {{ selectedDate.toLocaleDateString() }}!
       </p>
+
+      <div v-if="targetDateValue !== null" class="value-display">
+        <span class="value-label">Value: </span>
+        <ValueDisplay :value="targetDateValue" />
+      </div>
 
       <div class="today-actions">
         <q-btn
@@ -80,6 +98,20 @@ const handleAdd = () => {
   font-size: 1.2em;
   color: #28a745;
   font-weight: 600;
+}
+
+.value-display {
+  margin: 12px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.value-label {
+  font-size: 1.1em;
+  color: #495057;
+  font-weight: 500;
 }
 
 /* Today actions styling (Edit/Add buttons) */
