@@ -89,60 +89,16 @@ export const useLogsStore = defineStore("logs", () => {
     recalculateAggregates(name);
   }
 
-  // Replace today's log value (by timestamp range) with a new value
-  function updateTodayLogValue(name: string, newValue: LogValue) {
-    const logValuesRef = getLogValues(name);
-
-    const indexToday = logValuesRef.value.findIndex((lv) =>
-      isToday(lv.timestamp)
-    );
-
-    if (indexToday !== -1) {
-      logValuesRef.value.splice(indexToday, 1, newValue);
-    }
-
-    store.set(`${LocalStorageKeys.logsPrefix}${name}`, logValuesRef.value);
-    recalculateAggregates(name);
-  }
-
-  // Increment today's numeric value by delta; if not numeric or not found, no-op
-  function incrementTodayNumberValue(
+  // Generic helper to update a log value based on a date predicate
+  function updateLogValue(
     name: string,
-    delta: number,
-    comment: string = ""
-  ) {
-    const logValuesRef = getLogValues(name);
-
-    const indexToday = logValuesRef.value.findIndex((lv) =>
-      isToday(lv.timestamp)
-    );
-
-    if (indexToday === -1) return;
-
-    const existing = logValuesRef.value[indexToday];
-    if (typeof existing.value !== "number") return;
-
-    const updated: LogValue = {
-      value: (existing.value as number) + delta,
-      timestamp: new Date().toISOString(),
-      comment: comment || existing.comment || "",
-    };
-
-    logValuesRef.value.splice(indexToday, 1, updated);
-    store.set(`${LocalStorageKeys.logsPrefix}${name}`, logValuesRef.value);
-    recalculateAggregates(name);
-  }
-
-  // Replace log value for a specific date with a new value
-  function updateLogValueByDate(
-    name: string,
-    targetDate: Date,
-    newValue: LogValue
+    newValue: LogValue,
+    datePredicate: (timestamp: string) => boolean
   ) {
     const logValuesRef = getLogValues(name);
 
     const index = logValuesRef.value.findIndex((lv) =>
-      isDate(lv.timestamp, targetDate)
+      datePredicate(lv.timestamp)
     );
 
     if (index !== -1) {
@@ -152,17 +108,22 @@ export const useLogsStore = defineStore("logs", () => {
     }
   }
 
-  // Increment numeric value for a specific date by delta; if not numeric or not found, no-op
-  function incrementNumberValueByDate(
+  // Replace today's log value (by timestamp range) with a new value
+  function updateTodayLogValue(name: string, newValue: LogValue) {
+    updateLogValue(name, newValue, (timestamp) => isToday(timestamp));
+  }
+
+  // Generic helper to increment a numeric log value based on a date predicate
+  function incrementNumberValue(
     name: string,
-    targetDate: Date,
     delta: number,
+    datePredicate: (timestamp: string) => boolean,
     comment: string = ""
   ) {
     const logValuesRef = getLogValues(name);
 
     const index = logValuesRef.value.findIndex((lv) =>
-      isDate(lv.timestamp, targetDate)
+      datePredicate(lv.timestamp)
     );
 
     if (index === -1) return;
@@ -179,6 +140,46 @@ export const useLogsStore = defineStore("logs", () => {
     logValuesRef.value.splice(index, 1, updated);
     store.set(`${LocalStorageKeys.logsPrefix}${name}`, logValuesRef.value);
     recalculateAggregates(name);
+  }
+
+  // Increment today's numeric value by delta; if not numeric or not found, no-op
+  function incrementTodayNumberValue(
+    name: string,
+    delta: number,
+    comment: string = ""
+  ) {
+    incrementNumberValue(
+      name,
+      delta,
+      (timestamp) => isToday(timestamp),
+      comment
+    );
+  }
+
+  // Replace log value for a specific date with a new value
+  function updateLogValueByDate(
+    name: string,
+    targetDate: Date,
+    newValue: LogValue
+  ) {
+    updateLogValue(name, newValue, (timestamp) =>
+      isDate(timestamp, targetDate)
+    );
+  }
+
+  // Increment numeric value for a specific date by delta; if not numeric or not found, no-op
+  function incrementNumberValueByDate(
+    name: string,
+    targetDate: Date,
+    delta: number,
+    comment: string = ""
+  ) {
+    incrementNumberValue(
+      name,
+      delta,
+      (timestamp) => isDate(timestamp, targetDate),
+      comment
+    );
   }
 
   // Calculate aggregates for a specific log type
