@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import type { LogValue } from "@/types";
+import ValueDisplay from "./ValueDisplay.vue";
 
 interface Props {
   logValues: LogValue[];
@@ -45,7 +46,6 @@ const handleDateClick = (timestamp: string) => {
 <template>
   <div class="bottom-half">
     <div class="history-header">
-      <h5>Log History</h5>
       <button
         v-if="!isOnChartPage()"
         class="chart-button"
@@ -66,15 +66,7 @@ const handleDateClick = (timestamp: string) => {
         class="log-entry"
       >
         <div class="log-value-display">
-          <span class="value">
-            {{
-              typeof logValue.value === "boolean"
-                ? logValue.value
-                  ? "✅"
-                  : "❌"
-                : logValue.value
-            }}
-          </span>
+          <ValueDisplay :value="logValue.value" />
           <div class="right-section">
             <span
               class="timestamp clickable"
@@ -119,14 +111,10 @@ const handleDateClick = (timestamp: string) => {
   margin-bottom: 0;
 }
 
-.history-header h5 {
-  margin: 0;
-}
-
 .chart-button {
   background: none;
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 8px 12px;
   cursor: pointer;
   font-size: 1.2em;
@@ -152,8 +140,8 @@ const handleDateClick = (timestamp: string) => {
 
 .log-entry {
   border: 1px solid #eee;
-  border-radius: 4px;
-  padding: 10px;
+  border-radius: 8px;
+  padding: 10px 20px;
   margin-bottom: 8px;
   background-color: #fafafa;
 }
@@ -162,17 +150,12 @@ const handleDateClick = (timestamp: string) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 5px;
 }
 
 .right-section {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.value {
-  font-size: 1.2em;
 }
 
 .timestamp {

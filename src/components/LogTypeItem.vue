@@ -4,6 +4,7 @@ import type { LogType } from "@/types";
 import { computed } from "vue";
 import { useLogsStore } from "@/stores/Logs";
 import { formatTimeAgo } from "@/helpers/timeFormatter";
+import ValueDisplay from "./ValueDisplay.vue";
 
 interface Props {
   logType: LogType;
@@ -94,9 +95,7 @@ const getLogStatus = (logType: LogType) => {
               {{ timeAgo }}
             </span>
             <span v-else class="no-logs">No logs yet</span>
-            <span v-if="lastValue !== undefined" class="last-value">
-              {{ lastValue }}
-            </span>
+            <ValueDisplay v-if="lastValue !== undefined" :value="lastValue" />
           </div>
         </div>
 
@@ -249,14 +248,6 @@ const getLogStatus = (logType: LogType) => {
 .no-logs {
   color: #ff9800;
   font-style: italic;
-}
-
-.last-value {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 500;
 }
 
 .chevron-icon {
