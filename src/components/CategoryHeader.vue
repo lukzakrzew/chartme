@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import { useUnfilledLogTypes } from "@/composables/useUnfilledLogTypes";
+import { useLogsStore } from "@/stores/Logs";
+import { computed } from "vue";
+import type { LogType } from "@/types";
 
 interface CategoryGroup {
   categoryName: string;
-  categoryIcon: string;
-  categoryColor: string;
-  items: any[];
+  items: LogType[];
 }
 
 interface Props {
@@ -15,6 +16,23 @@ interface Props {
 
 const props = defineProps<Props>();
 const router = useRouter();
+const logsStore = useLogsStore();
+
+const categoryIcon = computed(() => {
+  const representativeItem = props.group.items[0];
+  const category = representativeItem.category
+    ? logsStore.getCategory(representativeItem.category)
+    : null;
+  return category?.icon || "category";
+});
+
+const categoryColor = computed(() => {
+  const representativeItem = props.group.items[0];
+  const category = representativeItem.category
+    ? logsStore.getCategory(representativeItem.category)
+    : null;
+  return category?.color || "grey";
+});
 
 // Use composable for unfilled log types logic
 const { unfilledLogTypes } = useUnfilledLogTypes(props.group.categoryName);
@@ -31,8 +49,8 @@ const navigateToFillCategory = () => {
 <template>
   <div class="category-header">
     <q-icon
-      :name="group.categoryIcon"
-      :color="group.categoryColor"
+      :name="categoryIcon"
+      :color="categoryColor"
       size="md"
       class="category-header-icon"
     />

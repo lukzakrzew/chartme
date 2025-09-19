@@ -5,3 +5,5 @@ export const LOG_TYPES = {
   boolean: "boolean",
   number: "number",
 } as const;
+
+export const NO_CATEGORY = "No Category";

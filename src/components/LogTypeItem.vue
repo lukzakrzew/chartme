@@ -1,27 +1,12 @@
 <script setup lang="ts">
-import { isLogTypeFilledRecentlyUtil } from "@/composables/useUnfilledLogTypes";
+import { isLogTypeFilledRecently } from "@/composables/useUnfilledLogTypes";
 import type { LogType } from "@/types";
-
-interface EnhancedLogType {
-  name: string;
-  type: string;
-  frequency: number;
-  archived: boolean;
-  favorite: boolean;
-  categoryIcon: string;
-  categoryColor: string;
-  categoryName: string;
-  lastValue: any;
-  timeAgo: string | null;
-  frequencyDisplay: string;
-  aggrs?: {
-    lastTime?: string;
-    lastValue?: any;
-  };
-}
+import { computed } from "vue";
+import { useLogsStore } from "@/stores/Logs";
+import { formatTimeAgo } from "@/helpers/timeFormatter";
 
 interface Props {
-  logType: EnhancedLogType;
+  logType: LogType;
   isGrouped?: boolean;
 }
 
@@ -32,6 +17,25 @@ const emit = defineEmits<{
   navigateToEditLogType: [logTypeName: string];
   toggleFavorite: [logTypeName: string];
 }>();
+
+const logsStore = useLogsStore();
+
+const category = computed(() =>
+  props.logType.category ? logsStore.getCategory(props.logType.category) : null
+);
+
+const categoryIcon = computed(() => category.value?.icon || "category");
+const categoryColor = computed(() => category.value?.color || "grey");
+
+const lastValue = computed(() => props.logType.aggrs?.lastValue);
+
+const timeAgo = computed(() =>
+  props.logType.aggrs?.lastTime
+    ? formatTimeAgo(props.logType.aggrs.lastTime)
+    : null
+);
+
+const frequencyDisplay = computed(() => `1/${props.logType.frequency}`);
 
 const navigateToAddLog = () => {
   emit("navigateToAddLog", props.logType.name);
@@ -45,27 +49,15 @@ const toggleFavorite = () => {
   emit("toggleFavorite", props.logType.name);
 };
 
-// Convert EnhancedLogType to LogType for utility function compatibility
-const convertToLogType = (enhanced: EnhancedLogType): LogType => ({
-  name: enhanced.name,
-  type: enhanced.type as any,
-  desc: "",
-  frequency: enhanced.frequency,
-  oneToTen: false,
-  favorite: enhanced.favorite,
-  archived: enhanced.archived,
-  category: enhanced.categoryName,
-  aggrs: enhanced.aggrs || {},
-});
-
-const getLogStatus = (logType: EnhancedLogType) => {
+// Convert LogType for utility function compatibility
+const getLogStatus = (logType: LogType) => {
   if (logType.archived) {
     return "default"; // Don't show status for archived items
   }
 
   // Convert to LogType format and use the utility function
-  const logTypeObj = convertToLogType(logType);
-  const isFilled = isLogTypeFilledRecentlyUtil(logTypeObj);
+  const logTypeObj = logType;
+  const isFilled = isLogTypeFilledRecently(logTypeObj);
 
   return isFilled ? "green" : "red";
 };
@@ -85,8 +77,8 @@ const getLogStatus = (logType: EnhancedLogType) => {
         <!-- Category icon - only show when not grouped -->
         <q-icon
           v-if="!props.isGrouped"
-          :name="logType.categoryIcon"
-          :color="logType.categoryColor"
+          :name="categoryIcon"
+          :color="categoryColor"
           size="md"
           class="category-icon"
         />
@@ -97,13 +89,13 @@ const getLogStatus = (logType: EnhancedLogType) => {
             <span v-if="logType.archived" class="archived-label">Archived</span>
           </div>
           <div class="log-type-meta">
-            <span class="frequency">{{ logType.frequencyDisplay }}</span>
-            <span v-if="logType.timeAgo" class="last-log">
-              {{ logType.timeAgo }}
+            <span class="frequency">{{ frequencyDisplay }}</span>
+            <span v-if="timeAgo" class="last-log">
+              {{ timeAgo }}
             </span>
             <span v-else class="no-logs">No logs yet</span>
-            <span v-if="logType.lastValue !== undefined" class="last-value">
-              {{ logType.lastValue }}
+            <span v-if="lastValue !== undefined" class="last-value">
+              {{ lastValue }}
             </span>
           </div>
         </div>

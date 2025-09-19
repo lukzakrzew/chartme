@@ -6,112 +6,21 @@ import { useRouter } from "vue-router";
 import FillInAllButton from "@/components/FillInAllButton.vue";
 import LogTypeItem from "@/components/LogTypeItem.vue";
 import CategoryHeader from "@/components/CategoryHeader.vue";
+import { useLogTypes } from "@/composables/useLogTypes";
 
 const logsStore = useLogsStore();
 const settingsStore = useSettingsStore();
 const router = useRouter();
-const logTypes = computed(() => logsStore.logTypes);
+const { sortedLogTypes, groupedLogTypes } = useLogTypes();
 
-// Group by categories toggle - now from settings store
 const groupByCategories = computed({
   get: () => settingsStore.settings.groupByCategories,
   set: (value) => settingsStore.setGroupByCategories(value),
 });
 
-// Show archived toggle - from settings store
 const showArchived = computed({
   get: () => settingsStore.settings.showArchived,
   set: (value) => settingsStore.setShowArchived(value),
-});
-
-// Format time ago
-const formatTimeAgo = (timestamp: string) => {
-  const now = new Date();
-  const logDate = new Date(timestamp);
-  const diffInMs = now.getTime() - logDate.getTime();
-  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
-
-  if (diffInMinutes < 1) return "Just now";
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-  if (diffInHours < 24) return `${diffInHours}h ago`;
-  if (diffInDays < 7) return `${diffInDays}d ago`;
-
-  // For older dates, show the date
-  return logDate.toLocaleDateString();
-};
-
-// Enhanced log types with category info, last value and time ago
-const enhancedLogTypes = computed(() => {
-  // Filter items based on showArchived setting
-  const filteredLogTypes = showArchived.value
-    ? logTypes.value.filter((logType) => logType.archived) // Show only archived when ON
-    : logTypes.value.filter((logType) => !logType.archived); // Show only active when OFF
-
-  // First, map all log types with enhanced data
-  const enhanced = filteredLogTypes.map((logType) => {
-    // Get category info
-    const category = logType.category
-      ? logsStore.getCategory(logType.category)
-      : null;
-
-    // Get aggregates data
-    const lastTime = logType.aggrs?.lastTime;
-    const lastValue = logType.aggrs?.lastValue;
-    const timeAgo = lastTime ? formatTimeAgo(lastTime) : null;
-
-    return {
-      ...logType,
-      categoryIcon: category?.icon || "category",
-      categoryColor: category?.color || "grey",
-      categoryName: category?.name || "No Category",
-      lastValue,
-      timeAgo,
-      frequencyDisplay: `1/${logType.frequency}`,
-    };
-  });
-
-  // Sort: favorites first, then by name
-  return enhanced.sort((a, b) => {
-    // Favorites come first
-    if (a.favorite && !b.favorite) return -1;
-    if (!a.favorite && b.favorite) return 1;
-
-    // If both are favorites or both are not, sort by name
-    return a.name.localeCompare(b.name);
-  });
-});
-
-// Grouped log types by category
-const groupedLogTypes = computed(() => {
-  if (!groupByCategories.value) {
-    return null; // Return null when not grouping
-  }
-
-  const groups: { [categoryName: string]: typeof enhancedLogTypes.value } = {};
-
-  enhancedLogTypes.value.forEach((logType) => {
-    const categoryName = logType.categoryName;
-    if (!groups[categoryName]) {
-      groups[categoryName] = [];
-    }
-    groups[categoryName].push(logType);
-  });
-
-  // Convert to array and sort categories by name, with "No Category" last
-  return Object.entries(groups)
-    .sort(([a], [b]) => {
-      if (a === "No Category") return 1;
-      if (b === "No Category") return -1;
-      return a.localeCompare(b);
-    })
-    .map(([categoryName, items]) => ({
-      categoryName,
-      categoryIcon: items[0].categoryIcon,
-      categoryColor: items[0].categoryColor,
-      items: items.sort((a, b) => a.name.localeCompare(b.name)), // Sort items within category
-    }));
 });
 
 const navigateToAddLog = (logTypeName: string) => {
@@ -157,7 +66,7 @@ const toggleFavorite = (logTypeName: string) => {
     <!-- Log types list -->
     <div class="log-type-list" v-if="!groupByCategories">
       <LogTypeItem
-        v-for="logType in enhancedLogTypes"
+        v-for="logType in sortedLogTypes"
         :key="logType.name"
         :log-type="logType"
         :is-grouped="false"

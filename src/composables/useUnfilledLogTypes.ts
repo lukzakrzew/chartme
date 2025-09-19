@@ -2,13 +2,7 @@ import { computed } from "vue";
 import type { LogType } from "@/types";
 import { useLogsStore } from "@/stores/Logs";
 
-/**
- * Utility function to check if a log type has been filled recently (based on frequency)
- * Works with aggregated data (lastTime) instead of full LogValues array
- * @param logType - The log type to check (must have aggrs.lastTime)
- * @returns true if filled recently, false if needs filling
- */
-export function isLogTypeFilledRecentlyUtil(logType: LogType): boolean {
+export function isLogTypeFilledRecently(logType: LogType): boolean {
   // If no aggregates or no lastTime, it needs filling
   if (!logType.aggrs?.lastTime) {
     return false; // No logs at all, needs filling
@@ -46,12 +40,6 @@ export function isLogTypeFilledRecentlyUtil(logType: LogType): boolean {
  */
 export function useUnfilledLogTypes(categoryName?: string) {
   const logsStore = useLogsStore();
-
-  // Helper function to check if a log type has been filled recently (based on frequency)
-  const isLogTypeFilledRecently = (logType: LogType): boolean => {
-    // Use aggregated data (lastTime) instead of full log values array
-    return isLogTypeFilledRecentlyUtil(logType);
-  };
 
   // Get all log types that haven't been filled recently (based on frequency, filtered by category if specified)
   const unfilledLogTypes = computed((): LogType[] => {

@@ -204,8 +204,8 @@ function onFrequencyOptionChange(option: string) {
 }
 
 function validateName(name: string): boolean {
-  // Allow only letters, digits, and spaces
-  const nameRegex = /^[a-zA-Z0-9\s]+$/;
+  // Allow only letters (including Unicode), digits, and spaces
+  const nameRegex = /^[\p{L}0-9\s]+$/u;
   return nameRegex.test(name) && name.trim().length > 0;
 }
 
