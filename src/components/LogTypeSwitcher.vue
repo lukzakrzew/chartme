@@ -2,7 +2,9 @@
 import { computed } from "vue";
 import { useLogTypes } from "@/composables/useLogTypes";
 import { useLogsStore } from "@/stores/Logs";
+import { useSettingsStore } from "@/stores/Settings";
 import { NO_CATEGORY } from "@/constants";
+import { useSwipe } from "@vueuse/core";
 
 interface Props {
   currentLogTypeName: string;
@@ -15,11 +17,36 @@ const emit = defineEmits<{
 }>();
 
 const logsStore = useLogsStore();
-const { sortedLogTypes, getNextLogType, getPreviousLogType } = useLogTypes();
+const settingsStore = useSettingsStore();
+const { sortedLogTypes, groupedLogTypes } = useLogTypes();
+
+// Swipe gesture using VueUse
+useSwipe(document, {
+  threshold: 50, // Minimum swipe distance
+  onSwipeEnd: (_, direction) => {
+    // Only handle horizontal swipes
+    if (direction === "left") {
+      goToNextLogType();
+    } else if (direction === "right") {
+      goToPreviousLogType();
+    }
+  },
+});
+
+// Get the appropriate log types list based on grouping setting
+const effectiveLogTypes = computed(() => {
+  if (settingsStore.settings.groupByCategories) {
+    // When grouping is enabled, flatten the grouped structure to maintain category order
+    return groupedLogTypes.value.flatMap((group) => group.items);
+  } else {
+    // When grouping is disabled, use the standard sorted list
+    return sortedLogTypes.value;
+  }
+});
 
 // Options for the dropdown with category icons
 const dropdownOptions = computed(() =>
-  sortedLogTypes.value.map((logType) => {
+  effectiveLogTypes.value.map((logType) => {
     const category = logType.category
       ? logsStore.getCategory(logType.category)
       : null;
@@ -37,12 +64,32 @@ const dropdownOptions = computed(() =>
   })
 );
 
+// Navigation functions that respect grouping setting
+const getLogTypeByOffset = (currentLogTypeName: string, offset: number) => {
+  const currentIndex = effectiveLogTypes.value.findIndex(
+    (logType) => logType.name === currentLogTypeName
+  );
+  if (currentIndex === -1) return null;
+
+  const targetIndex = currentIndex + offset;
+  if (targetIndex < 0 || targetIndex >= effectiveLogTypes.value.length)
+    return null;
+
+  return effectiveLogTypes.value[targetIndex];
+};
+
+const getNextLogTypeLocal = (currentLogTypeName: string) =>
+  getLogTypeByOffset(currentLogTypeName, 1);
+
+const getPreviousLogTypeLocal = (currentLogTypeName: string) =>
+  getLogTypeByOffset(currentLogTypeName, -1);
+
 // Check if navigation buttons should be enabled
 const canGoToNextLogType = computed(
-  () => getNextLogType(props.currentLogTypeName) !== null
+  () => getNextLogTypeLocal(props.currentLogTypeName) !== null
 );
 const canGoToPreviousLogType = computed(
-  () => getPreviousLogType(props.currentLogTypeName) !== null
+  () => getPreviousLogTypeLocal(props.currentLogTypeName) !== null
 );
 
 // Get the currently selected option for display
@@ -53,14 +100,14 @@ const selectedOption = computed(() =>
 );
 
 const goToNextLogType = () => {
-  const nextLogType = getNextLogType(props.currentLogTypeName);
+  const nextLogType = getNextLogTypeLocal(props.currentLogTypeName);
   if (nextLogType) {
     emit("change", nextLogType.name);
   }
 };
 
 const goToPreviousLogType = () => {
-  const prevLogType = getPreviousLogType(props.currentLogTypeName);
+  const prevLogType = getPreviousLogTypeLocal(props.currentLogTypeName);
   if (prevLogType) {
     emit("change", prevLogType.name);
   }
