@@ -69,8 +69,33 @@ export function useLogTypes() {
       }));
   });
 
+  // Navigation functions for log types
+  const getLogTypeByOffset = (
+    currentLogTypeName: string,
+    offset: number
+  ): LogType | null => {
+    const sortedTypes = sortedLogTypes.value;
+    const currentIndex = sortedTypes.findIndex(
+      (logType) => logType.name === currentLogTypeName
+    );
+    if (currentIndex === -1) return null;
+
+    const targetIndex = currentIndex + offset;
+    if (targetIndex < 0 || targetIndex >= sortedTypes.length) return null;
+
+    return sortedTypes[targetIndex];
+  };
+
+  const getNextLogType = (currentLogTypeName: string): LogType | null =>
+    getLogTypeByOffset(currentLogTypeName, 1);
+
+  const getPreviousLogType = (currentLogTypeName: string): LogType | null =>
+    getLogTypeByOffset(currentLogTypeName, -1);
+
   return {
     sortedLogTypes,
     groupedLogTypes,
+    getNextLogType,
+    getPreviousLogType,
   };
 }

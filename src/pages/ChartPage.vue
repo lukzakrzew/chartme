@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import { useLogsStore } from "@/stores/Logs";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { computed, ref } from "vue";
 import type { LogValue } from "@/types";
 import LogHistory from "@/components/LogHistory.vue";
+import LogTypeSwitcher from "@/components/LogTypeSwitcher.vue";
 import { Chart } from "vue-chartjs";
 
 const route = useRoute();
+const router = useRouter();
 const logsStore = useLogsStore();
-const logTypeName = route.params.logTypeName as string;
 
-const logType = logsStore.getLogType(logTypeName);
-const logValues = logsStore.getLogValues(logTypeName);
+const logTypeName = computed(() => route.params.logTypeName as string);
+
+const logType = computed(() => logsStore.getLogType(logTypeName.value));
+const logValues = computed(() => logsStore.getLogValues(logTypeName.value));
 
 // Track current period offset (0 = most recent period, 1 = previous period, etc.)
 const periodOffset = ref(0);
@@ -44,6 +47,13 @@ const canGoPrevious = computed(() => {
   // For simplicity, we'll allow going back up to 10 periods
   return periodOffset.value < 10;
 });
+
+// Log type change handler
+const onLogTypeChange = (newLogTypeName: string) => {
+  if (newLogTypeName && newLogTypeName !== logTypeName.value) {
+    router.push(`/chart/${encodeURIComponent(newLogTypeName)}`);
+  }
+};
 
 // Get the date range for display
 const currentDateRange = computed(() => {
@@ -90,7 +100,7 @@ const chartData = computed(() => {
   const valuesByDate: { [date: string]: number | boolean } = {};
 
   if (logValues.value) {
-    logValues.value.forEach((log: LogValue) => {
+    logValues.value.value.forEach((log: LogValue) => {
       const logDate = new Date(log.timestamp).toISOString().split("T")[0];
       if (currentPeriodDays.includes(logDate)) {
         valuesByDate[logDate] = log.value;
@@ -156,7 +166,7 @@ const chartData = computed(() => {
 
 // Chart options
 const chartOptions = computed(() => {
-  const isBoolean = logType?.type === "boolean";
+  const isBoolean = logType.value?.type === "boolean";
 
   return {
     responsive: true,
@@ -223,8 +233,8 @@ const chartOptions = computed(() => {
               },
             }
           : undefined,
-        max: isBoolean ? 1 : logType?.oneToTen ? 10 : undefined,
-        min: isBoolean ? 0 : logType?.oneToTen ? 1 : undefined,
+        max: isBoolean ? 1 : logType.value?.oneToTen ? 10 : undefined,
+        min: isBoolean ? 0 : logType.value?.oneToTen ? 1 : undefined,
       },
     },
     interaction: {
@@ -238,6 +248,12 @@ const chartOptions = computed(() => {
 <template>
   <div v-if="!logType" class="no-such-log-type">No such log type</div>
   <div v-else class="chart-container">
+    <!-- Log Type Switcher -->
+    <LogTypeSwitcher
+      :current-log-type-name="logTypeName"
+      @change="onLogTypeChange"
+    />
+
     <div class="chart-section">
       <div class="navigation-bar">
         <div class="nav-left">
@@ -285,7 +301,7 @@ const chartOptions = computed(() => {
       </div>
     </div>
 
-    <LogHistory :log-values="logValues" />
+    <LogHistory :log-values="logValues.value" />
   </div>
 </template>
 
