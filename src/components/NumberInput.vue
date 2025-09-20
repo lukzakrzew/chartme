@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 import type { LogValue } from "@/types";
 
 interface Props {
@@ -23,6 +23,7 @@ const emit = defineEmits<{
 
 // Number input functionality
 const numberInput = ref<number | null>(null);
+const numberInputRef = ref<HTMLInputElement | null>(null);
 
 // Reactive computed for number buttons based on oneToTen setting and last logged value
 const computedNumberButtons = computed((): number[] => {
@@ -112,12 +113,20 @@ const clickNumberButton = (value: number) => {
     }
   }
 };
+
+// Auto-focus the input when component mounts
+onMounted(() => {
+  if (numberInputRef.value) {
+    numberInputRef.value.focus();
+  }
+});
 </script>
 
 <template>
   <div class="log-type-number">
     <div class="number-input-section">
       <input
+        ref="numberInputRef"
         v-model.number="numberInput"
         type="number"
         placeholder="Enter a number..."

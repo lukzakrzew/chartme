@@ -30,8 +30,8 @@ const updateComment = (value: string) => {
 
 <template>
   <div>
-    <!-- Conditional comment textarea -->
-    <div v-if="showCommentInput" class="comment-input">
+    <!-- Comment input row with textarea and button -->
+    <div v-if="showCommentInput" class="comment-input-row">
       <textarea
         :value="commentText"
         placeholder="Add a comment for this log entry..."
@@ -39,13 +39,29 @@ const updateComment = (value: string) => {
         class="comment-textarea"
         @input="updateComment(($event.target as HTMLTextAreaElement).value)"
       ></textarea>
+      <q-btn
+        icon="cancel"
+        round
+        flat
+        size="md"
+        color="blue"
+        aria-label="Hide comment"
+        @click="toggleComment"
+        class="comment-cancel-btn"
+      />
     </div>
 
-    <!-- Comment toggle button at bottom -->
-    <div class="comment-toggle">
-      <button @click="toggleComment" class="toggle-comment-btn">
-        {{ showCommentInput ? "❌" : "💬" }}
-      </button>
+    <!-- Comment toggle button when input is hidden -->
+    <div v-else class="comment-toggle">
+      <q-btn
+        icon="chat"
+        round
+        flat
+        size="md"
+        color="blue"
+        aria-label="Add comment"
+        @click="toggleComment"
+      />
     </div>
   </div>
 </template>
@@ -58,34 +74,16 @@ const updateComment = (value: string) => {
   padding-bottom: 10px;
 }
 
-.toggle-comment-btn {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #28a745;
-  background-color: white;
-  color: #28a745;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2em;
-}
-
-.toggle-comment-btn:hover {
-  background-color: #28a745;
-  color: white;
-  transform: scale(1.1);
-}
-
-.comment-input {
+.comment-input-row {
   margin-top: 15px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   width: 100%;
 }
 
 .comment-textarea {
-  width: 100%;
+  flex: 1;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -98,5 +96,10 @@ const updateComment = (value: string) => {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.comment-cancel-btn {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 </style>
