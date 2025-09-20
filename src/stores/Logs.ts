@@ -36,6 +36,28 @@ export const useLogsStore = defineStore("logs", () => {
   function updateLogType(oldName: string, updatedLogType: LogType) {
     const index = logTypes.value.findIndex((lt) => lt.name === oldName);
     if (index !== -1) {
+      // If the name changed, we need to migrate the log values to the new key
+      if (oldName !== updatedLogType.name) {
+        const oldKey = `${LocalStorageKeys.logsPrefix}${oldName}`;
+        const newKey = `${LocalStorageKeys.logsPrefix}${updatedLogType.name}`;
+
+        // Get existing log values from the old key
+        const oldLogValues = store.get(oldKey) || [];
+
+        // Store them under the new key
+        store.set(newKey, oldLogValues);
+
+        // Remove the old key
+        store.remove(oldKey);
+
+        // Update the reactive refs map
+        if (logValuesRefs.has(oldName)) {
+          const oldRef = logValuesRefs.get(oldName)!;
+          logValuesRefs.delete(oldName);
+          logValuesRefs.set(updatedLogType.name, oldRef);
+        }
+      }
+
       logTypes.value[index] = updatedLogType;
       store.set(LocalStorageKeys.logTypes, logTypes.value);
     }
