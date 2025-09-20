@@ -1,5 +1,16 @@
 <script setup lang="ts">
+import { ref, onMounted } from "vue";
 import { exportData, importData } from "@/helpers/importExport";
+import { useNotifications } from "@/composables/useNotifications";
+import SettingsDialog from "@/components/SettingsDialog.vue";
+
+const showSettingsDialog = ref(false);
+
+// Initialize notifications when the app is mounted
+onMounted(async () => {
+  const { initialize } = useNotifications();
+  await initialize();
+});
 </script>
 
 <template>
@@ -19,6 +30,14 @@ import { exportData, importData } from "@/helpers/importExport";
         <q-btn flat round dense icon="settings">
           <q-menu>
             <q-list style="min-width: 100px">
+              <q-item
+                clickable
+                @click="showSettingsDialog = true"
+                v-close-popup
+              >
+                <q-item-section>Notifications</q-item-section>
+              </q-item>
+              <q-separator />
               <q-item clickable @click="importData" v-close-popup>
                 <q-item-section>Import</q-item-section>
               </q-item>
@@ -37,6 +56,9 @@ import { exportData, importData } from "@/helpers/importExport";
       </q-page>
     </q-page-container>
   </q-layout>
+
+  <!-- Settings Dialog -->
+  <SettingsDialog v-model="showSettingsDialog" />
 </template>
 
 <style scoped>

@@ -1,5 +1,5 @@
 import { createApp } from "vue";
-import { Quasar } from "quasar";
+import { Quasar, Notify } from "quasar";
 import { createPinia } from "pinia";
 import quasarIconSet from "quasar/icon-set/material-icons";
 import "@quasar/extras/material-icons/material-icons.css";
@@ -17,7 +17,9 @@ const pinia = createPinia();
 console.log("create pinia");
 
 app.use(Quasar, {
-  plugins: {},
+  plugins: {
+    Notify,
+  },
   iconSet: quasarIconSet,
 });
 app.use(router);

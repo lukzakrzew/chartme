@@ -1,0 +1,1 @@
+{"name":"ChartMe","short_name":"ChartMe","description":"A personal tracking application with daily reminders","start_url":"/chartme/","display":"standalone","background_color":"#ffffff","theme_color":"#000000","lang":"en","scope":"/chartme/","icons":[{"src":"vite.svg","sizes":"any","type":"image/svg+xml"}]}

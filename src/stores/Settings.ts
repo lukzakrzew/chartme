@@ -9,6 +9,11 @@ export const LocalStorageKeys = {
 export interface AppSettings {
   groupByCategories: boolean;
   showArchived: boolean;
+  notifications: {
+    enabled: boolean;
+    time: string; // Format: "HH:MM"
+    lastScheduled?: Date;
+  };
 }
 
 export const useSettingsStore = defineStore("settings", () => {
@@ -16,11 +21,22 @@ export const useSettingsStore = defineStore("settings", () => {
   const defaultSettings: AppSettings = {
     groupByCategories: false,
     showArchived: false,
+    notifications: {
+      enabled: false,
+      time: "21:30",
+    },
   };
 
-  const settings = ref<AppSettings>(
-    store.get(LocalStorageKeys.settings) || defaultSettings
-  );
+  // Load settings from localStorage and merge with defaults
+  const storedSettings = store.get(LocalStorageKeys.settings);
+  const settings = ref<AppSettings>({
+    ...defaultSettings,
+    ...storedSettings,
+    notifications: {
+      ...defaultSettings.notifications,
+      ...(storedSettings?.notifications || {}),
+    },
+  });
 
   function updateSettings(newSettings: Partial<AppSettings>) {
     settings.value = { ...settings.value, ...newSettings };
@@ -43,6 +59,36 @@ export const useSettingsStore = defineStore("settings", () => {
     setShowArchived(!settings.value.showArchived);
   }
 
+  // Notification settings
+  function setNotificationsEnabled(enabled: boolean) {
+    updateSettings({
+      notifications: {
+        ...settings.value.notifications,
+        enabled,
+      },
+    });
+  }
+
+  function setNotificationTime(time: string) {
+    updateSettings({
+      notifications: {
+        ...settings.value.notifications,
+        time,
+      },
+    });
+  }
+
+  function updateNotificationSettings(
+    notificationSettings: Partial<AppSettings["notifications"]>
+  ) {
+    updateSettings({
+      notifications: {
+        ...settings.value.notifications,
+        ...notificationSettings,
+      },
+    });
+  }
+
   // Initialize localStorage with defaults if not exists
   if (!store.get(LocalStorageKeys.settings)) {
     store.set(LocalStorageKeys.settings, defaultSettings);
@@ -55,5 +101,8 @@ export const useSettingsStore = defineStore("settings", () => {
     toggleGroupByCategories,
     setShowArchived,
     toggleShowArchived,
+    setNotificationsEnabled,
+    setNotificationTime,
+    updateNotificationSettings,
   };
 });
