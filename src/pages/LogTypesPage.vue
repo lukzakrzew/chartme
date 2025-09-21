@@ -145,7 +145,7 @@ const initializeOrderValues = (group: CategoryGroup) => {
       <div v-for="group in groupedLogTypes" class="category-group">
         <CategoryHeader :group="group" />
 
-        <div class="category-items">
+        <transition-group name="log-type" class="category-items" tag="div">
           <LogTypeItem
             v-for="logType in group.items"
             :key="logType.name"
@@ -156,7 +156,7 @@ const initializeOrderValues = (group: CategoryGroup) => {
             @move-up="moveLogTypeUp"
             @move-down="moveLogTypeDown"
           />
-        </div>
+        </transition-group>
       </div>
     </div>
 
@@ -238,6 +238,22 @@ const initializeOrderValues = (group: CategoryGroup) => {
   gap: 12px;
   margin-left: 0px;
   padding-left: 10px;
+}
+
+/* Smooth animations for reordering */
+.log-type-move {
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.log-type-enter-active,
+.log-type-leave-active {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.log-type-enter-from,
+.log-type-leave-to {
+  opacity: 0;
+  transform: translateY(-15px) scale(0.95);
 }
 
 /* Larger labels for FAB actions */
