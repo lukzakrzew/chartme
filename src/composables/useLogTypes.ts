@@ -13,11 +13,6 @@ export function useLogTypes() {
   const logsStore = useLogsStore();
   const settingsStore = useSettingsStore();
 
-  // const logTypes = computed(() => logsStore.logTypes);
-  const groupByCategories = computed(
-    () => settingsStore.settings.groupByCategories
-  );
-
   const showArchived = computed(() => settingsStore.settings.showArchived);
 
   // Enhanced log types with category info, last value and time ago
@@ -40,10 +35,6 @@ export function useLogTypes() {
 
   // Grouped log types by category
   const groupedLogTypes = computed<CategoryGroup[]>(() => {
-    if (!groupByCategories.value) {
-      return [];
-    }
-
     const groups: { [categoryName: string]: LogType[] } = {};
 
     sortedLogTypes.value.forEach((logType) => {

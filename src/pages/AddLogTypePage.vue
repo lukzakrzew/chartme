@@ -6,7 +6,7 @@
           {{ isEditMode ? "Edit Log Type" : "Create Log Type" }}
         </div>
 
-        <q-form @submit="onSubmit" @reset="onReset" class="q-gutter-md">
+        <q-form @submit="onSubmit" class="q-gutter-md">
           <q-input
             v-model="form.name"
             label="Name"
@@ -105,7 +105,6 @@
               :icon="isEditMode ? 'edit' : 'save'"
             />
             <q-btn label="Cancel" color="grey" flat @click="onCancel" />
-            <q-btn label="Reset" color="orange" flat type="reset" />
           </div>
 
           <div v-if="errorMessage" class="text-negative q-mt-md">
@@ -263,19 +262,6 @@ function onSubmit() {
   }
 
   router.push({ path: "/" });
-}
-
-function onReset() {
-  form.name = "";
-  form.desc = "";
-  form.type = LOG_TYPES.number;
-  form.frequency = 1;
-  form.oneToTen = false;
-  form.category = undefined;
-  form.favorite = false;
-  form.archived = false;
-  frequencyOption.value = "daily";
-  errorMessage.value = "";
 }
 
 function onCancel() {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { LogValue } from "@/types";
 import ValueDisplay from "@/components/ValueDisplay.vue";
-import { isDate } from "@/helpers/dateUtils";
+import { isDate, getTodayDateString, getDateString } from "@/helpers/dateUtils";
 import { computed } from "vue";
 
 interface Props {
@@ -25,6 +25,12 @@ const targetDateValue = computed((): any => {
     isDate(log.timestamp, targetDate)
   );
   return logForDate ? logForDate.value : null;
+});
+
+// Check if the selected date is today
+const isSelectedDateToday = computed((): boolean => {
+  if (!props.selectedDate) return true; // No selected date means today
+  return getDateString(props.selectedDate) === getTodayDateString();
 });
 
 const handleEdit = () => {
@@ -60,7 +66,7 @@ const handleAdd = () => {
           @click="handleEdit"
         />
         <q-btn
-          v-if="isNumberType"
+          v-if="isNumberType && isSelectedDateToday"
           icon="add"
           round
           flat

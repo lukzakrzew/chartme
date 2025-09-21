@@ -7,7 +7,6 @@ export const LocalStorageKeys = {
 } as const;
 
 export interface AppSettings {
-  groupByCategories: boolean;
   showArchived: boolean;
   notifications: {
     enabled: boolean;
@@ -19,7 +18,6 @@ export interface AppSettings {
 export const useSettingsStore = defineStore("settings", () => {
   // Initialize settings from localStorage or defaults
   const defaultSettings: AppSettings = {
-    groupByCategories: false,
     showArchived: false,
     notifications: {
       enabled: false,
@@ -41,14 +39,6 @@ export const useSettingsStore = defineStore("settings", () => {
   function updateSettings(newSettings: Partial<AppSettings>) {
     settings.value = { ...settings.value, ...newSettings };
     store.set(LocalStorageKeys.settings, settings.value);
-  }
-
-  function setGroupByCategories(value: boolean) {
-    updateSettings({ groupByCategories: value });
-  }
-
-  function toggleGroupByCategories() {
-    setGroupByCategories(!settings.value.groupByCategories);
   }
 
   function setShowArchived(value: boolean) {
@@ -97,8 +87,6 @@ export const useSettingsStore = defineStore("settings", () => {
   return {
     settings,
     updateSettings,
-    setGroupByCategories,
-    toggleGroupByCategories,
     setShowArchived,
     toggleShowArchived,
     setNotificationsEnabled,

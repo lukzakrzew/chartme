@@ -11,12 +11,7 @@ import { useLogTypes } from "@/composables/useLogTypes";
 const logsStore = useLogsStore();
 const settingsStore = useSettingsStore();
 const router = useRouter();
-const { sortedLogTypes, groupedLogTypes } = useLogTypes();
-
-const groupByCategories = computed({
-  get: () => settingsStore.settings.groupByCategories,
-  set: (value) => settingsStore.setGroupByCategories(value),
-});
+const { groupedLogTypes } = useLogTypes();
 
 const showArchived = computed({
   get: () => settingsStore.settings.showArchived,
@@ -29,6 +24,10 @@ const navigateToAddLog = (logTypeName: string) => {
 
 const navigateToAddLogType = () => {
   router.push("/add-log-type");
+};
+
+const navigateToAddCategory = () => {
+  router.push("/add-category");
 };
 
 const navigateToEditLogType = (logTypeName: string) => {
@@ -46,13 +45,6 @@ const toggleFavorite = (logTypeName: string) => {
     <div class="controls-row">
       <div class="toggles">
         <q-toggle
-          label="Group by categories"
-          v-model="groupByCategories"
-          color="primary"
-          size="md"
-        />
-
-        <q-toggle
           label="View archived"
           v-model="showArchived"
           color="grey-7"
@@ -63,21 +55,8 @@ const toggleFavorite = (logTypeName: string) => {
       <FillInAllButton />
     </div>
 
-    <!-- Log types list -->
-    <div class="log-type-list" v-if="!groupByCategories">
-      <LogTypeItem
-        v-for="logType in sortedLogTypes"
-        :key="logType.name"
-        :log-type="logType"
-        :is-grouped="false"
-        @navigate-to-add-log="navigateToAddLog"
-        @navigate-to-edit-log-type="navigateToEditLogType"
-        @toggle-favorite="toggleFavorite"
-      />
-    </div>
-
     <!-- Grouped log types list -->
-    <div class="grouped-log-type-list" v-else>
+    <div class="grouped-log-type-list">
       <div v-for="group in groupedLogTypes" class="category-group">
         <CategoryHeader :group="group" />
 
@@ -95,9 +74,34 @@ const toggleFavorite = (logTypeName: string) => {
       </div>
     </div>
 
-    <!-- Floating Action Button -->
+    <!-- Floating Action Button (Speed Dial) -->
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="add" color="primary" @click="navigateToAddLogType" />
+      <q-fab
+        color="primary"
+        text-color="white"
+        icon="add"
+        active-icon="close"
+        direction="up"
+      >
+        <q-fab-action
+          color="primary"
+          text-color="white"
+          icon="post_add"
+          label="Add Log Type"
+          external-label
+          label-position="left"
+          @click="navigateToAddLogType"
+        />
+        <q-fab-action
+          color="secondary"
+          text-color="white"
+          icon="category"
+          label="Add Category"
+          external-label
+          label-position="left"
+          @click="navigateToAddCategory"
+        />
+      </q-fab>
     </q-page-sticky>
   </div>
 </template>
@@ -154,6 +158,12 @@ const toggleFavorite = (logTypeName: string) => {
   gap: 12px;
   margin-left: 0px;
   padding-left: 10px;
+}
+
+/* Larger labels for FAB actions */
+:deep(.q-fab__label) {
+  font-size: 15px;
+  padding: 5px 10px;
 }
 
 /* Responsive design */

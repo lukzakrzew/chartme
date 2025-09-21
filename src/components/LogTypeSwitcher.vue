@@ -2,7 +2,6 @@
 import { computed } from "vue";
 import { useLogTypes } from "@/composables/useLogTypes";
 import { useLogsStore } from "@/stores/Logs";
-import { useSettingsStore } from "@/stores/Settings";
 import { NO_CATEGORY } from "@/constants";
 import { useSwipe } from "@vueuse/core";
 
@@ -17,8 +16,7 @@ const emit = defineEmits<{
 }>();
 
 const logsStore = useLogsStore();
-const settingsStore = useSettingsStore();
-const { sortedLogTypes, groupedLogTypes } = useLogTypes();
+const { groupedLogTypes } = useLogTypes();
 
 // Swipe gesture using VueUse
 useSwipe(document, {
@@ -33,15 +31,9 @@ useSwipe(document, {
   },
 });
 
-// Get the appropriate log types list based on grouping setting
+// Get the log types list from grouped structure to maintain category order
 const effectiveLogTypes = computed(() => {
-  if (settingsStore.settings.groupByCategories) {
-    // When grouping is enabled, flatten the grouped structure to maintain category order
-    return groupedLogTypes.value.flatMap((group) => group.items);
-  } else {
-    // When grouping is disabled, use the standard sorted list
-    return sortedLogTypes.value;
-  }
+  return groupedLogTypes.value.flatMap((group) => group.items);
 });
 
 // Options for the dropdown with category icons

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import type { LogValue, LogType } from "@/types";
 import { LOG_TYPES } from "@/constants";
 import { useDateValidation } from "@/composables/useDateValidation";
@@ -27,8 +27,8 @@ const emit = defineEmits<{
 
 // Use the date validation composable
 const { hasLogForTargetDate } = useDateValidation(
-  props.logValues,
-  props.selectedDate
+  computed(() => props.logValues),
+  computed(() => props.selectedDate)
 );
 
 // UI state
@@ -57,7 +57,9 @@ const clearAfterSubmit = () => {
 const handleBooleanSubmit = (value: boolean) => {
   emit("submit", {
     value,
-    timestamp: new Date().toISOString(),
+    timestamp: props.selectedDate
+      ? props.selectedDate.toISOString()
+      : new Date().toISOString(),
     comment: commentText.value,
   });
   clearAfterSubmit();
@@ -84,7 +86,9 @@ const handleBooleanUpdateDate = (date: Date, value: boolean) => {
 const handleNumberSubmit = (value: number) => {
   emit("submit", {
     value,
-    timestamp: new Date().toISOString(),
+    timestamp: props.selectedDate
+      ? props.selectedDate.toISOString()
+      : new Date().toISOString(),
     comment: commentText.value,
   });
   clearAfterSubmit();
@@ -131,7 +135,12 @@ const handleAdd = () => {
 
 <template>
   <div>
-    <h4>{{ logType.name }}</h4>
+    <h4>
+      {{ logType.name }}
+      <span v-if="selectedDate" class="date-display">
+        - {{ selectedDate.toLocaleDateString() }}
+      </span>
+    </h4>
 
     <!-- Show message when log for target date already exists -->
     <LogExistsMessage
@@ -188,6 +197,13 @@ const handleAdd = () => {
 h4 {
   text-align: center;
   margin-bottom: 20px;
+}
+
+.date-display {
+  color: #666;
+  font-weight: normal;
+  font-size: 0.4em;
+  opacity: 0.7;
 }
 
 .log-value {

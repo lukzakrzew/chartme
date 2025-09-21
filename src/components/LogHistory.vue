@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import type { LogValue } from "@/types";
-import ValueDisplay from "./ValueDisplay.vue";
+import LogHistoryItem from "./LogHistoryItem.vue";
 
 interface Props {
   logValues: LogValue[];
@@ -16,16 +16,52 @@ const emit = defineEmits<{
   dateClick: [date: Date];
 }>();
 
-// Track which comments are expanded in the log history
-const expandedComments = ref(new Set<string>());
-
-const toggleCommentVisibility = (timestamp: string) => {
-  if (expandedComments.value.has(timestamp)) {
-    expandedComments.value.delete(timestamp);
-  } else {
-    expandedComments.value.add(timestamp);
+// Generate date entries for display (from oldest log to today)
+const dateEntries = computed(() => {
+  if (logValues.length === 0) {
+    return [];
   }
-};
+
+  // Find the oldest log date
+  const oldestLogDate = new Date(
+    Math.min(...logValues.map((log) => new Date(log.timestamp).getTime()))
+  );
+
+  // Start from the oldest log date
+  const startDate = new Date(oldestLogDate);
+  startDate.setHours(0, 0, 0, 0); // Start of day
+
+  // End at today
+  const endDate = new Date();
+  endDate.setHours(0, 0, 0, 0); // Start of day
+
+  const entries: Array<{ date: Date; logValue?: LogValue }> = [];
+
+  // Create a map of log values by date string for quick lookup
+  const logValuesByDate = new Map<string, LogValue>();
+  logValues.forEach((log) => {
+    const dateStr = new Date(log.timestamp).toDateString();
+    logValuesByDate.set(dateStr, log);
+  });
+
+  // Generate entries for each date from oldest to today
+  const currentDate = new Date(startDate);
+  while (currentDate <= endDate) {
+    const dateStr = currentDate.toDateString();
+    const logValue = logValuesByDate.get(dateStr);
+
+    entries.push({
+      date: new Date(currentDate),
+      logValue,
+    });
+
+    // Move to next day
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  // Return in reverse chronological order (newest first)
+  return entries.reverse();
+});
 
 const goToChart = () => {
   const logTypeName = route.params.logTypeName as string;
@@ -37,8 +73,7 @@ const isOnChartPage = () => {
   return route.path.startsWith("/chart/");
 };
 
-const handleDateClick = (timestamp: string) => {
-  const date = new Date(timestamp);
+const handleDateClick = (date: Date) => {
   emit("dateClick", date);
 };
 </script>
@@ -56,43 +91,15 @@ const handleDateClick = (timestamp: string) => {
       </button>
     </div>
     <div class="log-values-list">
-      <div v-if="logValues.length === 0" class="no-logs">
+      <div v-if="dateEntries.length === 0" class="no-logs">
         No log entries yet
       </div>
-      <div
-        v-else
-        v-for="logValue in logValues.slice().reverse()"
-        :key="logValue.timestamp"
-        class="log-entry"
-      >
-        <div class="log-value-display">
-          <ValueDisplay :value="logValue.value" />
-          <div class="right-section">
-            <span
-              class="timestamp clickable"
-              @click="handleDateClick(logValue.timestamp)"
-              >{{ new Date(logValue.timestamp).toLocaleString() }}</span
-            >
-            <span
-              class="comment-icon"
-              :class="{ visible: logValue.comment }"
-              @click="
-                logValue.comment
-                  ? toggleCommentVisibility(logValue.timestamp)
-                  : null
-              "
-            >
-              💬
-            </span>
-          </div>
-        </div>
-        <div
-          v-if="logValue.comment && expandedComments.has(logValue.timestamp)"
-          class="comment"
-        >
-          {{ logValue.comment }}
-        </div>
-      </div>
+      <LogHistoryItem
+        v-for="entry in dateEntries"
+        :key="entry.date.toISOString()"
+        :entry="entry"
+        @date-click="handleDateClick"
+      />
     </div>
   </div>
 </template>
@@ -136,64 +143,5 @@ const handleDateClick = (timestamp: string) => {
   font-style: italic;
   text-align: center;
   padding: 20px;
-}
-
-.log-entry {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 10px 20px;
-  margin-bottom: 8px;
-  background-color: #fafafa;
-}
-
-.log-value-display {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.right-section {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.timestamp {
-  font-size: 0.9em;
-  color: #666;
-}
-
-.timestamp.clickable {
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.timestamp.clickable:hover {
-  color: #007bff;
-  text-decoration: underline;
-}
-
-.comment-icon {
-  font-size: 1em;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.2s;
-}
-
-.comment-icon.visible {
-  opacity: 0.7;
-  pointer-events: auto;
-  cursor: pointer;
-}
-
-.comment-icon.visible:hover {
-  opacity: 1;
-  transform: scale(1.2);
-}
-
-.comment {
-  font-style: italic;
-  color: #555;
-  margin-top: 5px;
 }
 </style>

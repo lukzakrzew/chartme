@@ -20,13 +20,7 @@ onMounted(async () => {
         <q-toolbar-title>
           <router-link to="/" class="title-link">ChartMe</router-link>
         </q-toolbar-title>
-        <q-btn
-          flat
-          round
-          dense
-          icon="category"
-          :to="{ path: '/add-category' }"
-        />
+        <q-btn flat round dense icon="category" :to="{ path: '/categories' }" />
         <q-btn flat round dense icon="settings">
           <q-menu>
             <q-list style="min-width: 100px">
