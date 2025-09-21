@@ -14,7 +14,6 @@ export function useLogTypes() {
   const settingsStore = useSettingsStore();
 
   const showArchived = computed(() => settingsStore.settings.showArchived);
-  const changeOrder = computed(() => settingsStore.changeOrder);
 
   // Enhanced log types with category info, last value and time ago
   const sortedLogTypes = computed<LogType[]>(() => {
@@ -53,14 +52,13 @@ export function useLogTypes() {
       .map(([categoryName, items]) => ({
         categoryName,
         items: items.sort((a, b) => {
-          if (changeOrder.value) {
-            // Treat undefined as infinity (items without order go to the end)
-            const aOrder = a.order ?? Number.MAX_SAFE_INTEGER;
-            const bOrder = b.order ?? Number.MAX_SAFE_INTEGER;
-            const orderDiff = aOrder - bOrder;
-            if (orderDiff !== 0) return orderDiff;
-          }
-          // Default: sort by name
+          // Always sort by order first (treat undefined as infinity)
+          const aOrder = a.order ?? Number.MAX_SAFE_INTEGER;
+          const bOrder = b.order ?? Number.MAX_SAFE_INTEGER;
+          const orderDiff = aOrder - bOrder;
+          if (orderDiff !== 0) return orderDiff;
+
+          // Fallback: sort by name
           return a.name.localeCompare(b.name);
         }),
       }));
