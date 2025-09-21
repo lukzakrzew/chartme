@@ -63,14 +63,6 @@ export const useLogsStore = defineStore("logs", () => {
     }
   }
 
-  function toggleFavorite(logTypeName: string) {
-    const logType = getLogType(logTypeName);
-    if (logType) {
-      const updatedLogType = { ...logType, favorite: !logType.favorite };
-      updateLogType(logTypeName, updatedLogType);
-    }
-  }
-
   function addCategory(category: Category) {
     categories.value.push(category);
     store.set(LocalStorageKeys.categories, categories.value);
@@ -377,12 +369,6 @@ export const useLogsStore = defineStore("logs", () => {
     logTypes.value.forEach((logType, index) => {
       let needsUpdate = false;
 
-      // Migrate: ensure favorite field exists
-      if (logType.favorite === undefined) {
-        logTypes.value[index].favorite = false;
-        needsUpdate = true;
-      }
-
       // Migrate: ensure category field exists
       if (logType.category === undefined) {
         logTypes.value[index].category = undefined;
@@ -410,7 +396,6 @@ export const useLogsStore = defineStore("logs", () => {
     addLogType,
     getLogType,
     updateLogType,
-    toggleFavorite,
     addCategory,
     getCategory,
     updateCategory,

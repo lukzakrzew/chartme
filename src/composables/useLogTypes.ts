@@ -22,13 +22,8 @@ export function useLogTypes() {
       ? logsStore.logTypes.filter((logType) => logType.archived) // Show only archived when ON
       : logsStore.logTypes.filter((logType) => !logType.archived); // Show only active when OFF
 
-    // Sort: favorites first, then by name
+    // Sort by name
     return filteredLogTypes.sort((a, b) => {
-      // Favorites come first
-      if (a.favorite && !b.favorite) return -1;
-      if (!a.favorite && b.favorite) return 1;
-
-      // If both are favorites or both are not, sort by name
       return a.name.localeCompare(b.name);
     });
   });

@@ -14,7 +14,6 @@ ChartJS.register(...registerables);
 
 const app = createApp(App);
 const pinia = createPinia();
-console.log("create pinia");
 
 app.use(Quasar, {
   plugins: {

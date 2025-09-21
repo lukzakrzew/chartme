@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useLogsStore } from "@/stores/Logs";
 import { useSettingsStore } from "@/stores/Settings";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
@@ -8,7 +7,6 @@ import LogTypeItem from "@/components/LogTypeItem.vue";
 import CategoryHeader from "@/components/CategoryHeader.vue";
 import { useLogTypes } from "@/composables/useLogTypes";
 
-const logsStore = useLogsStore();
 const settingsStore = useSettingsStore();
 const router = useRouter();
 const { groupedLogTypes } = useLogTypes();
@@ -32,10 +30,6 @@ const navigateToAddCategory = () => {
 
 const navigateToEditLogType = (logTypeName: string) => {
   router.push(`/edit-log-type/${encodeURIComponent(logTypeName)}`);
-};
-
-const toggleFavorite = (logTypeName: string) => {
-  logsStore.toggleFavorite(logTypeName);
 };
 </script>
 
@@ -68,7 +62,6 @@ const toggleFavorite = (logTypeName: string) => {
             :is-grouped="true"
             @navigate-to-add-log="navigateToAddLog"
             @navigate-to-edit-log-type="navigateToEditLogType"
-            @toggle-favorite="toggleFavorite"
           />
         </div>
       </div>
@@ -129,12 +122,6 @@ const toggleFavorite = (logTypeName: string) => {
   justify-content: center;
 }
 
-.log-type-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 /* Grouped view styles */
 .grouped-log-type-list {
   width: 100%;
@@ -168,32 +155,6 @@ const toggleFavorite = (logTypeName: string) => {
 
 /* Responsive design */
 @media (max-width: 480px) {
-  .group-toggle-container {
-    padding: 0;
-  }
-
-  .group-toggle {
-    padding: 10px 20px;
-    gap: 10px;
-  }
-
-  .toggle-label {
-    font-size: 0.9em;
-  }
-
-  .show-archived-container {
-    padding: 0;
-  }
-
-  .show-archived-toggle {
-    padding: 8px 16px;
-    gap: 8px;
-  }
-
-  .toggle-label-small {
-    font-size: 0.8em;
-  }
-
   .category-items {
     margin-left: 0px;
     padding-left: 10px;

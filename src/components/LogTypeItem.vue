@@ -16,7 +16,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   navigateToAddLog: [logTypeName: string];
   navigateToEditLogType: [logTypeName: string];
-  toggleFavorite: [logTypeName: string];
 }>();
 
 const logsStore = useLogsStore();
@@ -44,10 +43,6 @@ const navigateToAddLog = () => {
 
 const navigateToEditLogType = () => {
   emit("navigateToEditLogType", props.logType.name);
-};
-
-const toggleFavorite = () => {
-  emit("toggleFavorite", props.logType.name);
 };
 
 // Convert LogType for utility function compatibility
@@ -100,15 +95,6 @@ const getLogStatus = (logType: LogType) => {
         </div>
 
         <!-- Action buttons -->
-        <q-btn
-          :icon="logType.favorite ? 'star' : 'star_border'"
-          :color="logType.favorite ? 'amber' : 'grey-6'"
-          size="sm"
-          flat
-          round
-          class="favorite-btn"
-          @click.stop="toggleFavorite"
-        />
         <q-btn
           icon="edit"
           size="sm"
@@ -178,17 +164,6 @@ const getLogStatus = (logType: LogType) => {
   opacity: 0.8;
 }
 
-.favorite-btn {
-  opacity: 0.7;
-  transition: all 0.2s ease;
-  margin-right: 4px;
-}
-
-.favorite-btn:hover {
-  opacity: 1;
-  transform: scale(1.1);
-}
-
 .edit-btn {
   opacity: 0.6;
   transition: opacity 0.2s ease;
@@ -231,6 +206,7 @@ const getLogStatus = (logType: LogType) => {
   font-size: 0.85em;
   color: #666;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .frequency {

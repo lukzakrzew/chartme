@@ -82,12 +82,6 @@
             outlined
           />
 
-          <q-toggle
-            v-model="form.favorite"
-            label="Add to favorites"
-            icon="star"
-          />
-
           <div class="q-mt-md">
             <q-toggle
               v-model="form.archived"
@@ -145,7 +139,6 @@ const form = reactive({
   frequency: 1,
   oneToTen: false,
   category: undefined as string | undefined,
-  favorite: false,
   archived: false,
 });
 const errorMessage = ref("");
@@ -162,7 +155,6 @@ onMounted(() => {
       form.frequency = existingLogType.frequency;
       form.oneToTen = existingLogType.oneToTen || false;
       form.category = existingLogType.category;
-      form.favorite = existingLogType.favorite || false;
       form.archived = existingLogType.archived || false;
 
       originalName.value = existingLogType.name;
@@ -240,7 +232,6 @@ function onSubmit() {
       frequency: form.frequency,
       oneToTen: form.oneToTen,
       category: form.category,
-      favorite: form.favorite,
       archived: form.archived,
       aggrs: {}, // Keep existing aggregates
     };
@@ -255,7 +246,6 @@ function onSubmit() {
       frequency: form.frequency,
       oneToTen: form.oneToTen,
       category: form.category,
-      favorite: form.favorite,
       archived: form.archived,
       aggrs: {}, // Initialize empty aggregations
     });
