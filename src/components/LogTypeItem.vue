@@ -178,6 +178,11 @@ const getLogStatus = (logType: LogType) => {
   border-color: #d32f2f;
 }
 
+/* Name color when not filled */
+.log-type-red .log-type-name {
+  color: #b95656;
+}
+
 .log-type-content {
   display: flex;
   justify-content: space-between;

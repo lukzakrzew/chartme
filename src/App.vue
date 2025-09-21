@@ -15,15 +15,35 @@ onMounted(async () => {
 
 <template>
   <q-layout view="hHh lpR fFf">
-    <q-header elevated>
+    <q-header elevated class="app-header">
       <q-toolbar>
-        <q-toolbar-title>
-          <router-link to="/" class="title-link">ChartMe</router-link>
+        <q-toolbar-title class="app-brand">
+          <router-link to="/" class="title-link">
+            <q-avatar size="28px" class="brand-avatar">
+              <q-icon name="auto_graph" />
+            </q-avatar>
+            <span class="brand-name">ChartMe</span>
+          </router-link>
         </q-toolbar-title>
-        <q-btn flat round dense icon="category" :to="{ path: '/categories' }" />
-        <q-btn flat round dense icon="settings">
+
+        <q-space />
+
+        <q-btn
+          flat
+          round
+          dense
+          icon="category"
+          :to="{ path: '/categories' }"
+          class="icon-btn"
+        >
+          <q-tooltip anchor="bottom middle" self="top middle"
+            >Categories</q-tooltip
+          >
+        </q-btn>
+        <q-btn flat round dense icon="settings" class="icon-btn">
+          <q-tooltip anchor="bottom middle" self="top middle">Menu</q-tooltip>
           <q-menu>
-            <q-list style="min-width: 100px">
+            <q-list style="min-width: 140px">
               <q-item
                 clickable
                 @click="showSettingsDialog = true"
@@ -56,12 +76,21 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.app-header {
+  background: linear-gradient(90deg, #2d2a6e, #6a11cb 60%, #2575fc);
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+}
+
 .q-page-container {
   width: 100%;
 }
 
 .title-link {
-  color: inherit;
+  color: #fff;
   text-decoration: none;
   cursor: pointer;
   transition: opacity 0.2s ease;
@@ -69,5 +98,19 @@ onMounted(async () => {
 
 .title-link:hover {
   opacity: 0.8;
+}
+
+.brand-avatar {
+  background: rgba(255, 255, 255, 0.18);
+  margin-right: 8px;
+}
+
+.brand-name {
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.icon-btn :deep(.q-icon) {
+  color: #fff;
 }
 </style>
