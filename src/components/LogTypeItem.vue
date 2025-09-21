@@ -3,6 +3,7 @@ import { isLogTypeFilledRecently } from "@/composables/useUnfilledLogTypes";
 import type { LogType } from "@/types";
 import { computed } from "vue";
 import { useLogsStore } from "@/stores/Logs";
+import { useSettingsStore } from "@/stores/Settings";
 import { formatTimeAgo } from "@/helpers/timeFormatter";
 import ValueDisplay from "./ValueDisplay.vue";
 
@@ -16,9 +17,13 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   navigateToAddLog: [logTypeName: string];
   navigateToEditLogType: [logTypeName: string];
+  moveUp: [logTypeName: string];
+  moveDown: [logTypeName: string];
 }>();
 
 const logsStore = useLogsStore();
+const settingsStore = useSettingsStore();
+const changeOrder = computed(() => settingsStore.changeOrder);
 
 const category = computed(() =>
   props.logType.category ? logsStore.getCategory(props.logType.category) : null
@@ -43,6 +48,14 @@ const navigateToAddLog = () => {
 
 const navigateToEditLogType = () => {
   emit("navigateToEditLogType", props.logType.name);
+};
+
+const moveUp = () => {
+  emit("moveUp", props.logType.name);
+};
+
+const moveDown = () => {
+  emit("moveDown", props.logType.name);
 };
 
 // Convert LogType for utility function compatibility
@@ -86,6 +99,7 @@ const getLogStatus = (logType: LogType) => {
           </div>
           <div class="log-type-meta">
             <span class="frequency">{{ frequencyDisplay }}</span>
+            <span class="order-display">Order: {{ logType.order }}</span>
             <span v-if="timeAgo" class="last-log">
               {{ timeAgo }}
             </span>
@@ -95,6 +109,24 @@ const getLogStatus = (logType: LogType) => {
         </div>
 
         <!-- Action buttons -->
+        <div v-if="changeOrder" class="order-buttons">
+          <q-btn
+            icon="keyboard_arrow_up"
+            size="sm"
+            flat
+            round
+            class="order-btn"
+            @click.stop="moveUp"
+          />
+          <q-btn
+            icon="keyboard_arrow_down"
+            size="sm"
+            flat
+            round
+            class="order-btn"
+            @click.stop="moveDown"
+          />
+        </div>
         <q-btn
           icon="edit"
           size="sm"
@@ -170,6 +202,22 @@ const getLogStatus = (logType: LogType) => {
 }
 
 .edit-btn:hover {
+  opacity: 1;
+}
+
+.order-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.order-btn {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  padding: 4px;
+}
+
+.order-btn:hover {
   opacity: 1;
 }
 

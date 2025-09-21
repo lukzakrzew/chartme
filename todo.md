@@ -18,3 +18,8 @@ you need to add "order" prop to LogType it should be number | undefined because 
 LogTypes should be ordered inside a category by order prop
 
 when user click on an arrow app should change order prop for this item and for other items from its category
+
+ns
+d
+b
+w

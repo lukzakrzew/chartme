@@ -1,19 +1,26 @@
 <script setup lang="ts">
 import { useSettingsStore } from "@/stores/Settings";
+import { useLogsStore } from "@/stores/Logs";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 import FillInAllButton from "@/components/FillInAllButton.vue";
 import LogTypeItem from "@/components/LogTypeItem.vue";
 import CategoryHeader from "@/components/CategoryHeader.vue";
-import { useLogTypes } from "@/composables/useLogTypes";
+import { useLogTypes, type CategoryGroup } from "@/composables/useLogTypes";
 
 const settingsStore = useSettingsStore();
+const logsStore = useLogsStore();
 const router = useRouter();
 const { groupedLogTypes } = useLogTypes();
 
 const showArchived = computed({
   get: () => settingsStore.settings.showArchived,
   set: (value) => settingsStore.setShowArchived(value),
+});
+
+const changeOrder = computed({
+  get: () => settingsStore.changeOrder,
+  set: (value) => (settingsStore.changeOrder = value),
 });
 
 const navigateToAddLog = (logTypeName: string) => {
@@ -31,6 +38,84 @@ const navigateToAddCategory = () => {
 const navigateToEditLogType = (logTypeName: string) => {
   router.push(`/edit-log-type/${encodeURIComponent(logTypeName)}`);
 };
+
+const moveLogTypeUp = (logTypeName: string) => {
+  console.log("moveLogTypeUp", logTypeName);
+  const logType = logsStore.getLogType(logTypeName);
+  if (!logType) throw new Error(`Log type ${logTypeName} not found`);
+
+  // Find the group this log type belongs to
+  const group = groupedLogTypes.value.find((g) =>
+    g.items.some((item) => item.name === logTypeName)
+  );
+  if (!group) throw new Error(`Group for log type ${logTypeName} not found`);
+
+  // Initialize order values if this is the first reorder operation in this category
+  const hasOrderValues = group.items.every((item) => item.order !== undefined);
+  if (!hasOrderValues) {
+    initializeOrderValues(group);
+  }
+
+  // Find the current index in the sorted items
+  const currentIndex = group.items.findIndex(
+    (item) => item.name === logTypeName
+  );
+  if (currentIndex <= 0) return; // Can't move up if already at top
+
+  const currentItem = group.items[currentIndex];
+  const itemAbove = group.items[currentIndex - 1];
+
+  // Swap order values
+  const tempOrder = currentItem.order;
+  const updatedCurrentItem = { ...currentItem, order: itemAbove.order };
+  const updatedItemAbove = { ...itemAbove, order: tempOrder };
+
+  logsStore.updateLogType(currentItem.name, updatedCurrentItem);
+  logsStore.updateLogType(itemAbove.name, updatedItemAbove);
+};
+
+const moveLogTypeDown = (logTypeName: string) => {
+  const logType = logsStore.getLogType(logTypeName);
+  if (!logType) return;
+
+  // Find the group this log type belongs to
+  const group = groupedLogTypes.value.find((g) =>
+    g.items.some((item) => item.name === logTypeName)
+  );
+  if (!group) return;
+
+  // Initialize order values if this is the first reorder operation in this category
+  const hasOrderValues = group.items.every((item) => item.order !== undefined);
+  if (!hasOrderValues) {
+    initializeOrderValues(group);
+  }
+
+  // Find the current index in the sorted items
+  const currentIndex = group.items.findIndex(
+    (item) => item.name === logTypeName
+  );
+  if (currentIndex >= group.items.length - 1) return; // Can't move down if already at bottom
+
+  const currentItem = group.items[currentIndex];
+  const itemBelow = group.items[currentIndex + 1];
+
+  // Swap order values
+  const tempOrder = currentItem.order;
+  const updatedCurrentItem = { ...currentItem, order: itemBelow.order };
+  const updatedItemBelow = { ...itemBelow, order: tempOrder };
+
+  logsStore.updateLogType(currentItem.name, updatedCurrentItem);
+  logsStore.updateLogType(itemBelow.name, updatedItemBelow);
+};
+
+const initializeOrderValues = (group: CategoryGroup) => {
+  // Assign sequential order values to all items in the category
+  group.items.forEach((item, index) => {
+    const updatedItem = { ...item, order: index };
+    console.log("initializeOrderValues", updatedItem.name, updatedItem.order);
+    logsStore.updateLogType(item.name, updatedItem);
+  });
+};
 </script>
 
 <template>
@@ -41,6 +126,12 @@ const navigateToEditLogType = (logTypeName: string) => {
         <q-toggle
           label="View archived"
           v-model="showArchived"
+          color="grey-7"
+          size="md"
+        />
+        <q-toggle
+          label="Change order"
+          v-model="changeOrder"
           color="grey-7"
           size="md"
         />
@@ -62,6 +153,8 @@ const navigateToEditLogType = (logTypeName: string) => {
             :is-grouped="true"
             @navigate-to-add-log="navigateToAddLog"
             @navigate-to-edit-log-type="navigateToEditLogType"
+            @move-up="moveLogTypeUp"
+            @move-down="moveLogTypeDown"
           />
         </div>
       </div>

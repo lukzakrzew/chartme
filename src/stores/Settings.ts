@@ -36,6 +36,9 @@ export const useSettingsStore = defineStore("settings", () => {
     },
   });
 
+  // Non-persistent settings (reset on refresh)
+  const changeOrder = ref(false);
+
   function updateSettings(newSettings: Partial<AppSettings>) {
     settings.value = { ...settings.value, ...newSettings };
     store.set(LocalStorageKeys.settings, settings.value);
@@ -92,5 +95,6 @@ export const useSettingsStore = defineStore("settings", () => {
     setNotificationsEnabled,
     setNotificationTime,
     updateNotificationSettings,
+    changeOrder,
   };
 });

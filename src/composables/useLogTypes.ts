@@ -4,7 +4,7 @@ import { useSettingsStore } from "@/stores/Settings";
 import type { LogType } from "@/types";
 import { NO_CATEGORY } from "@/constants";
 
-type CategoryGroup = {
+export type CategoryGroup = {
   categoryName: string;
   items: LogType[];
 };
@@ -14,6 +14,7 @@ export function useLogTypes() {
   const settingsStore = useSettingsStore();
 
   const showArchived = computed(() => settingsStore.settings.showArchived);
+  const changeOrder = computed(() => settingsStore.changeOrder);
 
   // Enhanced log types with category info, last value and time ago
   const sortedLogTypes = computed<LogType[]>(() => {
@@ -51,7 +52,17 @@ export function useLogTypes() {
       })
       .map(([categoryName, items]) => ({
         categoryName,
-        items: items.sort((a, b) => a.name.localeCompare(b.name)), // Sort items within category
+        items: items.sort((a, b) => {
+          if (changeOrder.value) {
+            // Treat undefined as infinity (items without order go to the end)
+            const aOrder = a.order ?? Number.MAX_SAFE_INTEGER;
+            const bOrder = b.order ?? Number.MAX_SAFE_INTEGER;
+            const orderDiff = aOrder - bOrder;
+            if (orderDiff !== 0) return orderDiff;
+          }
+          // Default: sort by name
+          return a.name.localeCompare(b.name);
+        }),
       }));
   });
 
