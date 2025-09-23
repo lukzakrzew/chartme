@@ -32,11 +32,11 @@ const navigateToAddLogType = () => {
 };
 
 const navigateToAddCategory = () => {
-  router.push("/add-category");
+  router.push("/categories/add");
 };
 
 const navigateToEditLogType = (logTypeName: string) => {
-  router.push(`/edit-log-type/${encodeURIComponent(logTypeName)}`);
+  router.push(`/categories/edit/${encodeURIComponent(logTypeName)}`);
 };
 
 const moveLogTypeUp = (logTypeName: string) => {

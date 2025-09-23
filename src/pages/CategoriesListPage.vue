@@ -9,11 +9,11 @@ const router = useRouter();
 
 function onEditCategory(category: Category) {
   // Navigate to edit category route with the category data
-  router.push(`/edit-category/${encodeURIComponent(category.name)}`);
+  router.push(`/categories/edit/${encodeURIComponent(category.name)}`);
 }
 
 function navigateToAddCategory() {
-  router.push("/add-category");
+  router.push("/categories/add");
 }
 </script>
 

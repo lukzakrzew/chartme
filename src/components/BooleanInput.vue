@@ -9,18 +9,13 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   submit: [value: boolean];
-  updateToday: [value: boolean];
-  updateDate: [date: Date, value: boolean];
+  update: [date: Date | null, value: boolean];
 }>();
 
 const clickYes = () => {
   const value = true;
   if (props.isEditing) {
-    if (props.selectedDate) {
-      emit("updateDate", props.selectedDate, value);
-    } else {
-      emit("updateToday", value);
-    }
+    emit("update", props.selectedDate || null, value);
   } else {
     emit("submit", value);
   }
@@ -29,11 +24,7 @@ const clickYes = () => {
 const clickNo = () => {
   const value = false;
   if (props.isEditing) {
-    if (props.selectedDate) {
-      emit("updateDate", props.selectedDate, value);
-    } else {
-      emit("updateToday", value);
-    }
+    emit("update", props.selectedDate || null, value);
   } else {
     emit("submit", value);
   }

@@ -28,20 +28,20 @@ const handleLogSubmit = (logValue: LogValue) => {
   logsStore.addLogValue(logTypeName, logValue);
 };
 
-const handleUpdateToday = (logValue: LogValue) => {
-  logsStore.updateTodayLogValue(logTypeName, logValue);
+const handleUpdate = (date: Date | null, logValue: LogValue) => {
+  if (date) {
+    logsStore.updateLogValueByDate(logTypeName, date, logValue);
+  } else {
+    logsStore.updateTodayLogValue(logTypeName, logValue);
+  }
 };
 
-const handleIncrementToday = (delta: number, comment: string) => {
-  logsStore.incrementTodayNumberValue(logTypeName, delta, comment);
-};
-
-const handleUpdateDate = (date: Date, logValue: LogValue) => {
-  logsStore.updateLogValueByDate(logTypeName, date, logValue);
-};
-
-const handleIncrementDate = (date: Date, delta: number, comment: string) => {
-  logsStore.incrementNumberValueByDate(logTypeName, date, delta, comment);
+const handleIncrement = (date: Date | null, delta: number, comment: string) => {
+  if (date) {
+    logsStore.incrementNumberValueByDate(logTypeName, date, delta, comment);
+  } else {
+    logsStore.incrementTodayNumberValue(logTypeName, delta, comment);
+  }
 };
 
 // Handle date click from LogHistory component
@@ -62,10 +62,8 @@ const handleDateClick = (date: Date) => {
         :has-log-for-today="hasLogForToday"
         :selected-date="selectedDate || undefined"
         @submit="handleLogSubmit"
-        @update-today="handleUpdateToday"
-        @increment-today="handleIncrementToday"
-        @update-date="handleUpdateDate"
-        @increment-date="handleIncrementDate"
+        @update="handleUpdate"
+        @increment="handleIncrement"
       />
     </div>
 

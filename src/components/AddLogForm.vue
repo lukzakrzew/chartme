@@ -5,7 +5,6 @@ import { LOG_TYPES } from "@/constants";
 import { useDateValidation } from "@/composables/useDateValidation";
 import BooleanInput from "@/components/BooleanInput.vue";
 import NumberInput from "@/components/NumberInput.vue";
-import CommentInput from "@/components/CommentInput.vue";
 import LogExistsMessage from "@/components/LogExistsMessage.vue";
 
 interface Props {
@@ -19,10 +18,8 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   submit: [logValue: LogValue];
-  updateToday: [logValue: LogValue];
-  incrementToday: [delta: number, comment: string];
-  updateDate: [date: Date, logValue: LogValue];
-  incrementDate: [date: Date, delta: number, comment: string];
+  update: [date: Date | null, logValue: LogValue];
+  increment: [date: Date | null, delta: number, comment: string];
 }>();
 
 // Use the date validation composable
@@ -36,20 +33,10 @@ const isEditing = ref(false);
 const isAdding = ref(false);
 
 // Comment functionality
-const showCommentInput = ref(false);
 const commentText = ref("");
 
-const toggleComment = () => {
-  showCommentInput.value = !showCommentInput.value;
-  if (!showCommentInput.value) {
-    commentText.value = ""; // Clear content when closing
-  }
-};
-
 const clearAfterSubmit = () => {
-  if (showCommentInput.value) {
-    commentText.value = ""; // Clear after adding
-  }
+  commentText.value = ""; // Clear after adding
   isEditing.value = false;
   isAdding.value = false;
 };
@@ -65,19 +52,11 @@ const handleBooleanSubmit = (value: boolean) => {
   clearAfterSubmit();
 };
 
-const handleBooleanUpdateToday = (value: boolean) => {
-  emit("updateToday", {
+const handleBooleanUpdate = (date: Date | null, value: boolean) => {
+  const targetDate = date || new Date();
+  emit("update", date, {
     value,
-    timestamp: new Date().toISOString(),
-    comment: commentText.value,
-  });
-  clearAfterSubmit();
-};
-
-const handleBooleanUpdateDate = (date: Date, value: boolean) => {
-  emit("updateDate", date, {
-    value,
-    timestamp: date.toISOString(),
+    timestamp: targetDate.toISOString(),
     comment: commentText.value,
   });
   clearAfterSubmit();
@@ -94,31 +73,18 @@ const handleNumberSubmit = (value: number) => {
   clearAfterSubmit();
 };
 
-const handleNumberUpdateToday = (value: number) => {
-  emit("updateToday", {
+const handleNumberUpdate = (date: Date | null, value: number) => {
+  const targetDate = date || new Date();
+  emit("update", date, {
     value,
-    timestamp: new Date().toISOString(),
+    timestamp: targetDate.toISOString(),
     comment: commentText.value,
   });
   clearAfterSubmit();
 };
 
-const handleNumberUpdateDate = (date: Date, value: number) => {
-  emit("updateDate", date, {
-    value,
-    timestamp: date.toISOString(),
-    comment: commentText.value,
-  });
-  clearAfterSubmit();
-};
-
-const handleIncrementToday = (delta: number, comment: string) => {
-  emit("incrementToday", delta, comment);
-  clearAfterSubmit();
-};
-
-const handleIncrementDate = (date: Date, delta: number, comment: string) => {
-  emit("incrementDate", date, delta, comment);
+const handleIncrement = (date: Date | null, delta: number, comment: string) => {
+  emit("increment", date, delta, comment);
   clearAfterSubmit();
 };
 
@@ -162,8 +128,7 @@ const handleAdd = () => {
         :is-adding="isAdding"
         :selected-date="selectedDate"
         @submit="handleBooleanSubmit"
-        @update-today="handleBooleanUpdateToday"
-        @update-date="handleBooleanUpdateDate"
+        @update="handleBooleanUpdate"
       />
 
       <!-- Number type: Input and quick buttons -->
@@ -176,20 +141,11 @@ const handleAdd = () => {
         :selected-date="selectedDate"
         :comment-text="commentText"
         @submit="handleNumberSubmit"
-        @update-today="handleNumberUpdateToday"
-        @update-date="handleNumberUpdateDate"
-        @increment-today="handleIncrementToday"
-        @increment-date="handleIncrementDate"
+        @update="handleNumberUpdate"
+        @increment="handleIncrement"
+        @update:commentText="commentText = $event"
       />
     </div>
-
-    <!-- Comment input component -->
-    <CommentInput
-      v-if="!hasLogForTargetDate || isEditing || isAdding"
-      :show-comment-input="showCommentInput"
-      @toggle="toggleComment"
-      @update:commentText="commentText = $event"
-    />
   </div>
 </template>
 

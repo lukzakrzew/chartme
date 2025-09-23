@@ -20,9 +20,9 @@ const routes: RouteRecordRaw[] = [
     props: true,
   },
   { path: "/categories", component: CategoriesListPage },
-  { path: "/add-category", component: AddCategoryPage },
+  { path: "/categories/add", component: AddCategoryPage },
   {
-    path: "/edit-category/:categoryName",
+    path: "/categories/edit/:categoryName",
     component: AddCategoryPage,
     props: true,
   },

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from "vue";
 import type { LogValue } from "@/types";
+import ValueDisplay from "@/components/ValueDisplay.vue";
+import { isDate, getTodayDateString, getDateString } from "@/helpers/dateUtils";
 
 interface Props {
   logValues: LogValue[];
@@ -15,77 +17,43 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   submit: [value: number];
-  updateToday: [value: number];
-  updateDate: [date: Date, value: number];
-  incrementToday: [delta: number, comment: string];
-  incrementDate: [date: Date, delta: number, comment: string];
+  update: [date: Date | null, value: number];
+  increment: [date: Date | null, delta: number, comment: string];
+  "update:commentText": [value: string];
 }>();
 
 // Number input functionality
 const numberInput = ref<number | null>(null);
 const numberInputRef = ref<HTMLInputElement | null>(null);
 
-// Reactive computed for number buttons based on oneToTen setting and last logged value
-const computedNumberButtons = computed((): number[] => {
-  // If oneToTen is true, always show buttons from 1 to 10
-  if (props.oneToTen) {
-    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  }
+// Computed properties for today's value display
+const isSelectedDateToday = computed((): boolean => {
+  if (!props.selectedDate) return true; // No selected date means today
+  return getDateString(props.selectedDate) === getTodayDateString();
+});
 
-  // If oneToTen is false, show 4 less, last value, and 4 more
-  if (!props.logValues || props.logValues.length === 0) {
-    // Default values if no logs exist: show 1-10 but shifted to avoid 0
-    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  }
-
-  // Find the last numeric value
-  const lastNumericValue = props.logValues
-    .slice()
-    .reverse()
-    .find((log: LogValue) => typeof log.value === "number");
-
-  const baseValue = lastNumericValue ? (lastNumericValue.value as number) : 5;
-
-  // Create buttons: 4 less, base value, 5 greater
-  // If there aren't 4 less (would go below 0), add more greater values
-  const buttons: number[] = [];
-  const minValue = Math.max(0, baseValue - 4);
-
-  // If we had to adjust minValue up, add extra values to the higher end
-  const adjustment = baseValue - 4 - minValue;
-  const maxValue = baseValue + 5 + adjustment;
-
-  for (let i = minValue; i <= maxValue; i++) {
-    buttons.push(i);
-  }
-
-  // Remove duplicates (in case of edge cases) and sort
-  const uniqueButtons = [...new Set(buttons)].sort((a, b) => a - b);
-
-  return uniqueButtons;
+const todaysValue = computed((): any => {
+  if (!isSelectedDateToday.value) return null;
+  const targetDate = props.selectedDate || new Date();
+  const logForDate = props.logValues.find((log: LogValue) =>
+    isDate(log.timestamp, targetDate)
+  );
+  return logForDate ? logForDate.value : null;
 });
 
 const submitNumber = () => {
   if (numberInput.value !== null && numberInput.value !== undefined) {
     if (props.isAdding) {
-      if (props.selectedDate) {
-        emit(
-          "incrementDate",
-          props.selectedDate,
-          Number(numberInput.value),
-          props.commentText
-        );
-      } else {
-        emit("incrementToday", Number(numberInput.value), props.commentText);
-      }
+      emit(
+        "increment",
+        props.selectedDate || null,
+        Number(numberInput.value),
+        props.commentText
+      );
     } else {
       const value = Number(numberInput.value);
       if (props.isEditing) {
-        if (props.selectedDate) {
-          emit("updateDate", props.selectedDate, value);
-        } else {
-          emit("updateToday", value);
-        }
+        emit("update", props.selectedDate || null, value);
       } else {
         emit("submit", value);
       }
@@ -94,24 +62,8 @@ const submitNumber = () => {
   }
 };
 
-const clickNumberButton = (value: number) => {
-  if (props.isAdding) {
-    if (props.selectedDate) {
-      emit("incrementDate", props.selectedDate, value, props.commentText);
-    } else {
-      emit("incrementToday", value, props.commentText);
-    }
-  } else {
-    if (props.isEditing) {
-      if (props.selectedDate) {
-        emit("updateDate", props.selectedDate, value);
-      } else {
-        emit("updateToday", value);
-      }
-    } else {
-      emit("submit", value);
-    }
-  }
+const updateComment = (value: string) => {
+  emit("update:commentText", value);
 };
 
 // Auto-focus the input when component mounts
@@ -124,27 +76,36 @@ onMounted(() => {
 
 <template>
   <div class="log-type-number">
+    <!-- Show current value when date is today -->
+    <div
+      v-if="isSelectedDateToday && todaysValue !== null"
+      class="current-value-section"
+    >
+      <span class="value-label">Current value: </span>
+      <ValueDisplay :value="todaysValue" />
+    </div>
+
     <div class="number-input-section">
       <input
         ref="numberInputRef"
         v-model.number="numberInput"
         type="number"
-        placeholder="Enter a number..."
+        :placeholder="isAdding ? 'Increment by...' : 'Enter a number...'"
         class="number-input"
         @keyup.enter="submitNumber"
       />
       <button @click="submitNumber" class="submit-btn">Submit</button>
     </div>
 
-    <div class="number-buttons">
-      <button
-        v-for="value in computedNumberButtons"
-        :key="value"
-        @click="clickNumberButton(value)"
-        class="number-btn"
-      >
-        {{ value }}
-      </button>
+    <!-- Comment textarea - always visible -->
+    <div class="comment-section">
+      <textarea
+        :value="commentText"
+        placeholder="Add a comment for this log entry..."
+        rows="3"
+        class="comment-textarea"
+        @input="updateComment(($event.target as HTMLTextAreaElement).value)"
+      ></textarea>
     </div>
   </div>
 </template>
@@ -197,46 +158,49 @@ onMounted(() => {
   color: white;
 }
 
-.number-buttons {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+/* Comment section styling */
+.comment-section {
+  margin-top: 15px;
   width: 100%;
-  max-width: 400px;
+  max-width: 300px;
 }
 
-.number-btn {
-  padding: 12px 8px;
-  border: 1px solid #28a745;
-  background-color: white;
-  color: #28a745;
+.comment-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
   border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 1em;
-  font-weight: bold;
-  text-align: center;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.9em;
+  min-height: 60px;
 }
 
-.number-btn:hover {
-  background-color: #28a745;
-  color: white;
-  transform: translateY(-1px);
+.comment-textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-.number-btn:active {
-  transform: translateY(0);
+/* Current value display styling */
+.current-value-section {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.value-label {
+  font-size: 1.1em;
+  color: #495057;
+  font-weight: 500;
 }
 
 /* Responsive adjustments for smaller screens */
 @media (max-width: 480px) {
   .number-buttons {
     grid-template-columns: repeat(4, 1fr);
-  }
-
-  .number-input-section {
-    flex-direction: column;
-    gap: 8px;
   }
 
   .number-input {
