@@ -7,3 +7,8 @@ export const LOG_TYPES = {
 } as const;
 
 export const NO_CATEGORY = "No Category";
+
+export const VIEW_MODES = {
+  LOG: "log",
+  CHART: "chart",
+} as const;

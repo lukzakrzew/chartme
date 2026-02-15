@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { useLogsStore } from "@/stores/Logs";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { computed, ref } from "vue";
 import type { LogValue } from "@/types";
 import { isToday } from "@/helpers/dateUtils";
 import LogHistory from "@/components/LogHistory.vue";
 import AddLogForm from "@/components/AddLogForm.vue";
+import LogTypeSwitcher from "@/components/LogTypeSwitcher.vue";
 
 const route = useRoute();
+const router = useRouter();
 const logsStore = useLogsStore();
 const logTypeName = route.params.logTypeName as string;
 
@@ -50,11 +52,24 @@ const selectedDate = ref<Date | null>(null);
 const handleDateClick = (date: Date) => {
   selectedDate.value = date;
 };
+
+// Log type change handler
+const onLogTypeChange = (newLogTypeName: string) => {
+  if (newLogTypeName && newLogTypeName !== logTypeName) {
+    router.push(`/log/${encodeURIComponent(newLogTypeName)}`);
+  }
+};
 </script>
 
 <template>
   <div v-if="!logType" class="no-such-log-type">No such log type</div>
   <div v-else class="add-log-container">
+    <!-- Log Type Switcher -->
+    <LogTypeSwitcher
+      :current-log-type-name="logTypeName"
+      @change="onLogTypeChange"
+    />
+
     <div class="top-half">
       <AddLogForm
         :log-type="logType"

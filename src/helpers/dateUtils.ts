@@ -5,59 +5,60 @@
 
 /**
  * Get the date part of an ISO timestamp (YYYY-MM-DD)
+ * @deprecated Use getDateString for local date comparison instead
  */
 export function getDatePart(isoTimestamp: string): string {
   return isoTimestamp.substring(0, 10);
 }
 
 /**
- * Get today's date in YYYY-MM-DD format
+ * Get today's date in 'Fri Feb 14 2025' format (local time)
  */
 export function getTodayDateString(): string {
-  return new Date().toISOString().substring(0, 10);
+  return new Date().toDateString();
 }
 
 /**
- * Get date string for a specific date in YYYY-MM-DD format
+ * Get date string for a specific date in 'Fri Feb 14 2025' format (local time)
  */
 export function getDateString(date: Date): string {
-  return date.toISOString().substring(0, 10);
+  return date.toDateString();
 }
 
 /**
- * Check if two ISO timestamps are on the same date
+ * Check if two ISO timestamps are on the same date (using local time)
  */
 export function isSameDate(timestamp1: string, timestamp2: string): boolean {
-  return getDatePart(timestamp1) === getDatePart(timestamp2);
+  return new Date(timestamp1).toDateString() === new Date(timestamp2).toDateString();
 }
 
 /**
- * Check if an ISO timestamp is for today
+ * Check if an ISO timestamp is for today (using local time)
  */
 export function isToday(timestamp: string): boolean {
-  return getDatePart(timestamp) === getTodayDateString();
+  return new Date(timestamp).toDateString() === new Date().toDateString();
 }
 
 /**
- * Check if an ISO timestamp is for a specific date
+ * Check if an ISO timestamp is for a specific date (using local time)
  */
 export function isDate(timestamp: string, date: Date): boolean {
-  return getDatePart(timestamp) === getDateString(date);
+  return new Date(timestamp).toDateString() === date.toDateString();
 }
 
 /**
- * Filter log values for a specific date
+ * Filter log values for a specific date (using local time)
  */
 export function getLogValuesForDate(
   logValues: Array<{ timestamp: string }>,
   date: Date
 ) {
-  const targetDate = getDateString(date);
-  return logValues.filter((log) => getDatePart(log.timestamp) === targetDate);
+  const targetDateStr = date.toDateString();
+  return logValues.filter((log) => new Date(log.timestamp).toDateString() === targetDateStr);
 }
 
 /**
- * Check if there's any log for a specific date
+ * Check if there's any log for a specific date (using local time)
  */
 export function hasLogForDate(
   logValues: Array<{ timestamp: string }>,

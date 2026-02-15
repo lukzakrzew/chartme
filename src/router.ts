@@ -7,7 +7,7 @@ import LogTypesPage from "@/pages/LogTypesPage.vue";
 import AddLogTypePage from "@/pages/AddLogTypePage.vue";
 import AddCategoryPage from "@/pages/AddCategoryPage.vue";
 import CategoriesListPage from "@/pages/CategoriesListPage.vue";
-import AddLogPage from "@/pages/AddLogPage.vue";
+import AddLogPage from "@/pages/LogTypePage.vue";
 import FillInAllPage from "@/pages/FillInAllPage.vue";
 import ChartPage from "@/pages/ChartPage.vue";
 

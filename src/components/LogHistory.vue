@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRouter, useRoute } from "vue-router";
 import type { LogValue } from "@/types";
 import LogHistoryItem from "./LogHistoryItem.vue";
 
@@ -9,8 +8,6 @@ interface Props {
 }
 
 const { logValues } = defineProps<Props>();
-const router = useRouter();
-const route = useRoute();
 
 const emit = defineEmits<{
   dateClick: [date: Date];
@@ -63,16 +60,6 @@ const dateEntries = computed(() => {
   return entries.reverse();
 });
 
-const goToChart = () => {
-  const logTypeName = route.params.logTypeName as string;
-  router.push(`/chart/${logTypeName}`);
-};
-
-// Check if we're currently on the chart page
-const isOnChartPage = () => {
-  return route.path.startsWith("/chart/");
-};
-
 const handleDateClick = (date: Date) => {
   emit("dateClick", date);
 };
@@ -80,16 +67,7 @@ const handleDateClick = (date: Date) => {
 
 <template>
   <div class="bottom-half">
-    <div class="history-header">
-      <button
-        v-if="!isOnChartPage()"
-        class="chart-button"
-        @click="goToChart"
-        title="View Chart"
-      >
-        📊
-      </button>
-    </div>
+    <div class="history-header"></div>
     <div class="log-values-list">
       <div v-if="dateEntries.length === 0" class="no-logs">
         No log entries yet
